@@ -1,8 +1,13 @@
-local p = premake
+local p               = premake
+p.extensions.impcmake = { }
+
+require 'parser/directory'
+
+local m      = premake.extensions.impcmake
+local parser = p.extensions.impcmake.parser
 
 function cmake_project( relativePath )
-	local projectName = path.getbasename( relativePath )
+	local prj = parser.directory.parse( relativePath )
 
-	project( projectName )
-	kind( 'WindowedApp' )
+	return prj
 end
