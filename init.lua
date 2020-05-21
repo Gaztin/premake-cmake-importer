@@ -6,8 +6,8 @@ require 'parser/directory'
 local m      = premake.extensions.impcmake
 local parser = p.extensions.impcmake.parser
 
-function cmake_project( relativePath )
-	local prj = parser.directory.parse( relativePath )
+function cmake_project( filePath )
+	local prj = parser.directory.parse( path.rebase( filePath, '.', 'parser' ) )
 
 	return prj
 end
