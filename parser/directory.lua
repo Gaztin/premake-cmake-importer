@@ -13,11 +13,26 @@ function directory.parse( filePath )
 		filePath = path.normalize( filePath .. '/CMakeLists.txt' )
 	end
 
-	local file = io.open( filePath, "r" )
+	local file = io.open( filePath, 'r' )
 
 	if( file == nil ) then
 		p.error( 'Failed to open "%s"', filePath )
 		return nil
+	end
+
+	local line = file:read( '*l' )
+	while( line ) do
+		-- Trim leading whitespace
+		line = string.match( line, '^%s*(.*%S)' ) or ''
+
+		local firstChar = string.sub( line, 1, 1 )
+
+		-- Skip empty lines and comments
+		if( #line > 0 and firstChar ~= '#' ) then
+			print( line )
+		end
+
+		line = file:read( '*l' )
 	end
 
 	local prj = project( projectName )
