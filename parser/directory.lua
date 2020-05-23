@@ -74,6 +74,7 @@ function directory.deserializeProject( content, baseDir )
 		elseif( cmd.name == 'add_executable' ) then
 			local arguments   = cmd.arguments
 			local projectName = table.remove( arguments, 1 )
+			local modifiers   = { }
 
 			project( projectName )
 			kind( 'ConsoleApp' )
@@ -81,12 +82,20 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Add source files
 			for _,arg in ipairs( arguments ) do
-				arg = resolveVariables( arg )
+				if( table.contains( { 'WIN32', 'MACOSX_BUNDLE', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'ALIAS' }, arg ) ) then
+					if( arg == 'WIN32' ) then
+						kind( 'WindowedApp' )
+					else
+						p.warn( 'Unhandled modifier "%s" for command "%s"', arg, cmd.name )
+					end
+				else
+					arg = resolveVariables( arg )
 
-				for _,v in ipairs( string.explode( arg, ' ' ) ) do
-					local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+					for _,v in ipairs( string.explode( arg, ' ' ) ) do
+						local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
 
-					files { rebasedSourceFile }
+						files { rebasedSourceFile }
+					end
 				end
 			end
 
@@ -99,7 +108,7 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Make sure project exists
 			if( projectToAmend == nil ) then
-				p.error( 'Project "%s" referenced in "add_executable" not found in workspace', addToProject )
+				p.error( 'Project "%s" referenced in "%s" not found in workspace', addToProject, cmd.name )
 			end
 
 			-- Temporarily activate amended project
