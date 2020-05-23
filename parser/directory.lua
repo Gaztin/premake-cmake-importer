@@ -102,7 +102,7 @@ function directory.deserializeProject( content, baseDir )
 		end
 	end
 
-	kind( 'WindowedApp' )
+	kind( 'ConsoleApp' )
 	location( baseDir )
 
 	return prj
