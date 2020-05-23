@@ -45,6 +45,15 @@ function directory.deserializeProject( content, baseDir )
 	local commandList = directory.deserializeCommandList( content )
 	local variables   = { }
 
+	local function resolveVariables( str )
+		for k,v in pairs( variables ) do
+			local pattern = string.format( '${%s}', k )
+
+			str = string.gsub( str, pattern, v )
+		end
+		return str
+	end
+
 	for i,cmd in ipairs( commandList ) do
 		if( cmd.name == 'project' ) then
 			local projectName = cmd.arguments[ 1 ]
@@ -75,12 +84,7 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Add source files
 			for _,arg in ipairs( arguments ) do
-				-- Resolve variables
-				for k,v in pairs( variables ) do
-					local pattern = string.format( '${%s}', k )
-
-					arg = string.gsub( arg, pattern, v )
-				end
+				arg = resolveVariables( arg )
 
 				for _,v in ipairs( string.explode( arg, ' ' ) ) do
 					local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
