@@ -116,7 +116,7 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Add source files
 			for _,arg in ipairs( arguments ) do
-				if( arg == 'SYSTEM' or arg == 'BEFORE' or arg == 'INTERFACE' or arg == 'PUBLIC' or arg == 'PRIVATE' ) then
+				if( table.contains( { 'SYSTEM', 'BEFORE', 'INTERFACE', 'PUBLIC', 'PRIVATE' }, arg ) ) then
 					modifiers[ arg ] = true
 				else
 					local includeFunc = iif( modifiers[ 'SYSTEM' ] == true, sysincludedirs, includedirs )
