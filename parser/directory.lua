@@ -42,53 +42,64 @@ function directory.parse( filePath )
 end
 
 function directory.deserializeProject( content, baseDir )
-	local commandList     = directory.deserializeCommandList( content )
-	local projectCommands = table.filter( commandList, function( cmd ) return cmd.name == 'project' end )
-	local projectName     = 'CMakeProject'
-
-	if( #projectCommands > 0 ) then
-		projectName = projectCommands[ 1 ].arguments[ 1 ]
-	end
-
-	local prj = project( projectName )
-
-	local setCommands = table.filter( commandList, function( cmd ) return cmd.name == 'set' end )
-	local sets        = { }
-	for _,cmd in ipairs( setCommands ) do
-		local arguments = cmd.arguments
-		local setName   = table.remove( arguments, 1 )
-		sets[ setName ] = table.implode( arguments, '', '', ' ' )
-	end
-
-	local projectKind  = 'WindowedApp'
-	local projectFiles = { }
+	local commandList = directory.deserializeCommandList( content )
+	local variables   = { }
 
 	for i,cmd in ipairs( commandList ) do
-		if( cmd.name == 'add_executable' ) then
-			-- TODO: Add to given project at @cmd.arguments[ 1 ] instead of main project
-			local arguments         = cmd.arguments
-			local projectInQuestion = table.remove( arguments, 1 )
+		if( cmd.name == 'project' ) then
+			local projectName = cmd.arguments[ 1 ]
 
-			-- Resolve variables
-			arguments = table.implode( arguments, '', '', ' ' )
-			for k,v in pairs( sets ) do
-				local pattern = string.format( '${%s}', k )
+			-- Declare new project
+			project( projectName )
 
-				arguments = string.gsub( arguments, pattern, v )
+		elseif( cmd.name == 'set' ) then
+			local arguments    = cmd.arguments
+			local variableName = table.remove( arguments, 1 )
+
+			-- Store new variable
+			variables[ variableName ] = table.implode( arguments, '', '', ' ' )
+
+		elseif( cmd.name == 'add_executable' ) then
+			local arguments      = cmd.arguments
+			local projectName    = table.remove( arguments, 1 )
+			local currentProject = p.api.scope.project
+			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
+
+			-- Make sure project exists
+			if( projectToAmend == nil ) then
+				p.error( 'Project "%s" referenced in "add_executable" not found in workspace', addToProject )
 			end
 
-			local sourceFiles = string.explode( arguments, ' ' )
-			for i,v in ipairs( sourceFiles ) do
-				local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+			-- Temporarily activate amended project
+			p.api.scope.project = projectToAmend
 
-				table.insert( projectFiles, rebasedSourceFile )
+			-- Add source files
+			for _,arg in ipairs( arguments ) do
+				-- Resolve variables
+				for k,v in pairs( variables ) do
+					local pattern = string.format( '${%s}', k )
+
+					arg = string.gsub( arg, pattern, v )
+				end
+
+				for _,v in ipairs( string.explode( arg, ' ' ) ) do
+					local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+
+					files { rebasedSourceFile }
+				end
 			end
+
+			-- Restore scope
+			p.api.scope.project = currentProject
+
+		else
+			-- Warn about unhandled command
+			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
 		end
 	end
 
-	kind( projectKind )
+	kind( 'WindowedApp' )
 	location( baseDir )
-	files( projectFiles )
 
 	return prj
 end
