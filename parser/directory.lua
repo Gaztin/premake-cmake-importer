@@ -15,7 +15,7 @@ function directory.parse( filePath )
 
 	if( file == nil ) then
 		p.error( 'Failed to open "%s"', filePath )
-		return nil
+		return
 	end
 
 	local line    = file:read( '*l' )
@@ -38,12 +38,13 @@ function directory.parse( filePath )
 
 	local baseDir = path.getdirectory( filePath )
 
-	return directory.deserializeProject( content, baseDir )
+	directory.deserializeProject( content, baseDir )
 end
 
 function directory.deserializeProject( content, baseDir )
-	local commandList = directory.deserializeCommandList( content )
-	local variables   = { }
+	local commandList  = directory.deserializeCommandList( content )
+	local currentGroup = p.api.scope.group
+	local variables    = { }
 
 	local function resolveVariables( str )
 		for k,v in pairs( variables ) do
@@ -59,10 +60,12 @@ function directory.deserializeProject( content, baseDir )
 
 	for i,cmd in ipairs( commandList ) do
 		if( cmd.name == 'project' ) then
-			local projectName = cmd.arguments[ 1 ]
+			local groupName = cmd.arguments[ 1 ]
 
-			-- Declare new project
-			project( projectName )
+			-- Declare new workspace if none is active already
+			if( p.api.scope.workspace == nil ) then
+				group( workspaceName )
+			end
 
 		elseif( cmd.name == 'set' ) then
 			local arguments    = cmd.arguments
@@ -72,18 +75,12 @@ function directory.deserializeProject( content, baseDir )
 			variables[ variableName ] = table.implode( arguments, '', '', ' ' )
 
 		elseif( cmd.name == 'add_executable' ) then
-			local arguments      = cmd.arguments
-			local projectName    = table.remove( arguments, 1 )
-			local currentProject = p.api.scope.project
-			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
+			local arguments   = cmd.arguments
+			local projectName = table.remove( arguments, 1 )
 
-			-- Make sure project exists
-			if( projectToAmend == nil ) then
-				p.error( 'Project "%s" referenced in "add_executable" not found in workspace', addToProject )
-			end
-
-			-- Temporarily activate amended project
-			p.api.scope.project = projectToAmend
+			project( projectName )
+			kind( 'ConsoleApp' )
+			location( baseDir )
 
 			-- Add source files
 			for _,arg in ipairs( arguments ) do
@@ -95,9 +92,6 @@ function directory.deserializeProject( content, baseDir )
 					files { rebasedSourceFile }
 				end
 			end
-
-			-- Restore scope
-			p.api.scope.project = currentProject
 
 		elseif( cmd.name == 'target_include_directories' ) then
 			local arguments      = cmd.arguments
@@ -149,10 +143,10 @@ function directory.deserializeProject( content, baseDir )
 		end
 	end
 
-	kind( 'ConsoleApp' )
-	location( baseDir )
-
-	return prj
+	if( currentGroup ) then
+		-- Restore current group
+		group( currentGroup )
+	end
 end
 
 function directory.deserializeCommandList( content )
