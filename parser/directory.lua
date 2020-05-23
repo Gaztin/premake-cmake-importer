@@ -80,11 +80,38 @@ function directory.deserializeProject( content, baseDir )
 			kind( 'ConsoleApp' )
 			location( baseDir )
 
-			-- Add source files
 			for _,arg in ipairs( arguments ) do
 				if( table.contains( { 'WIN32', 'MACOSX_BUNDLE', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'ALIAS' }, arg ) ) then
 					if( arg == 'WIN32' ) then
 						kind( 'WindowedApp' )
+					else
+						p.warn( 'Unhandled modifier "%s" for command "%s"', arg, cmd.name )
+					end
+				else
+					arg = resolveVariables( arg )
+
+					for _,v in ipairs( string.explode( arg, ' ' ) ) do
+						local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+
+						files { rebasedSourceFile }
+					end
+				end
+			end
+
+		elseif( cmd.name == 'add_library' ) then
+			local arguments   = cmd.arguments
+			local projectName = table.remove( arguments, 1 )
+			local modifiers   = { }
+
+			project( projectName )
+			location( baseDir )
+
+			for _,arg in ipairs( arguments ) do
+				if( table.contains( { 'STATIC', 'SHARED', 'MODULE', 'UNKNOWN', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'OBJECT', 'ALIAS', 'INTERFACE' }, arg ) ) then
+					if( arg == 'STATIC' ) then
+						kind( 'StaticLib' )
+					elseif( arg == 'SHARED' ) then
+						kind( 'SharedLib' )
 					else
 						p.warn( 'Unhandled modifier "%s" for command "%s"', arg, cmd.name )
 					end
@@ -132,6 +159,41 @@ function directory.deserializeProject( content, baseDir )
 						local rebasedIncludeDir = path.rebase( v, baseDir, os.getcwd() )
 
 						includeFunc { rebasedIncludeDir }
+					end
+
+					-- Reset modifiers
+					modifiers = { }
+				end
+
+			end
+
+			-- Restore scope
+			p.api.scope.project = currentProject
+
+		elseif( cmd.name == 'target_link_libraries' ) then
+			local arguments      = cmd.arguments
+			local projectName    = table.remove( arguments, 1 )
+			local currentProject = p.api.scope.project
+			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
+			local modifiers      = { }
+
+			-- Make sure project exists
+			if( projectToAmend == nil ) then
+				p.error( 'Project "%s" referenced in "%s" not found in workspace', addToProject, cmd.name )
+			end
+
+			-- Temporarily activate amended project
+			p.api.scope.project = projectToAmend
+
+			-- Add source files
+			for _,arg in ipairs( arguments ) do
+				if( table.contains( { 'PRIVATE', 'PUBLIC', 'INTERFACE', 'LINK_INTERFACE_LIBRARIES', 'LINK_PRIVATE', 'LINK_PUBLIC' }, arg ) ) then
+					modifiers[ arg ] = true
+				else
+					arg = resolveVariables( arg )
+
+					for _,v in ipairs( string.explode( arg, ' ' ) ) do
+						links { v }
 					end
 
 					-- Reset modifiers
