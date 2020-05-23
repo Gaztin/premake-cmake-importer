@@ -75,10 +75,12 @@ function directory.deserializeProject( content, baseDir )
 			local arguments   = cmd.arguments
 			local projectName = table.remove( arguments, 1 )
 			local modifiers   = { }
+			local prj         = project( projectName )
 
-			project( projectName )
 			kind( 'ConsoleApp' )
 			location( baseDir )
+
+			prj._cmake = { }
 
 			for _,arg in ipairs( arguments ) do
 				if( table.contains( { 'WIN32', 'MACOSX_BUNDLE', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'ALIAS' }, arg ) ) then
@@ -102,9 +104,11 @@ function directory.deserializeProject( content, baseDir )
 			local arguments   = cmd.arguments
 			local projectName = table.remove( arguments, 1 )
 			local modifiers   = { }
+			local prj         = project( projectName )
 
-			project( projectName )
 			location( baseDir )
+
+			prj._cmake = { }
 
 			for _,arg in ipairs( arguments ) do
 				if( table.contains( { 'STATIC', 'SHARED', 'MODULE', 'UNKNOWN', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'OBJECT', 'ALIAS', 'INTERFACE' }, arg ) ) then
@@ -150,8 +154,6 @@ function directory.deserializeProject( content, baseDir )
 
 					if( modifiers[ 'BEFORE'    ] == true ) then p.warn( 'Unhandled modifier "BEFORE" was specified for "target_include_directories"'    ) end
 					if( modifiers[ 'INTERFACE' ] == true ) then p.warn( 'Unhandled modifier "INTERFACE" was specified for "target_include_directories"' ) end
-					if( modifiers[ 'PUBLIC'    ] == true ) then p.warn( 'Unhandled modifier "PUBLIC" was specified for "target_include_directories"'    ) end
-					if( modifiers[ 'PRIVATE'   ] == true ) then p.warn( 'Unhandled modifier "PRIVATE" was specified for "target_include_directories"'   ) end
 
 					arg = resolveVariables( arg )
 
@@ -159,6 +161,16 @@ function directory.deserializeProject( content, baseDir )
 						local rebasedIncludeDir = path.rebase( v, baseDir, os.getcwd() )
 
 						includeFunc { rebasedIncludeDir }
+
+						if( modifiers[ 'PUBLIC' ] == true ) then
+							if( modifiers[ 'SYSTEM' ] == true ) then
+								projectToAmend._cmake.publicsysincludedirs = projectToAmend._cmake.publicsysincludedirs or { }
+								table.insert( projectToAmend._cmake.publicsysincludedirs, rebasedIncludeDir )
+							else
+								projectToAmend._cmake.publicincludedirs = projectToAmend._cmake.publicincludedirs or { }
+								table.insert( projectToAmend._cmake.publicincludedirs, rebasedIncludeDir )
+							end
+						end
 					end
 
 					-- Reset modifiers
@@ -193,6 +205,22 @@ function directory.deserializeProject( content, baseDir )
 					arg = resolveVariables( arg )
 
 					for _,v in ipairs( string.explode( arg, ' ' ) ) do
+						local prj = p.workspace.findproject( p.api.scope.workspace, v )
+
+						-- Add includedirs marked PUBLIC
+						if( prj and prj._cmake ) then
+							if( prj._cmake.publicincludedirs ) then
+								for _,dir in ipairs( prj._cmake.publicincludedirs ) do
+									includedirs { dir }
+								end
+							end
+							if( prj._cmake.publicsysincludedirs ) then
+								for _,dir in ipairs( prj._cmake.publicsysincludedirs ) do
+									sysincludedirs { dir }
+								end
+							end
+						end
+
 						links { v }
 					end
 
