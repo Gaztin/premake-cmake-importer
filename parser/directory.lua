@@ -62,10 +62,7 @@ function directory.deserializeProject( content, baseDir )
 		if( cmd.name == 'project' ) then
 			local groupName = cmd.arguments[ 1 ]
 
-			-- Declare new workspace if none is active already
-			if( p.api.scope.workspace == nil ) then
-				group( workspaceName )
-			end
+			group( groupName )
 
 		elseif( cmd.name == 'set' ) then
 			local arguments    = cmd.arguments
