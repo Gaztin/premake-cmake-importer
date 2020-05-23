@@ -87,6 +87,7 @@ function directory.deserializeProject( content, baseDir )
 	end
 
 	kind( projectKind )
+	location( baseDir )
 	files( projectFiles )
 
 	return prj
