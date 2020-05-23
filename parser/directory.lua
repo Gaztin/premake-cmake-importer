@@ -87,8 +87,6 @@ function directory.deserializeProject( content, baseDir )
 	end
 
 	kind( projectKind )
-
-	-- TODO: Rebase project files to location of CMake directory
 	files( projectFiles )
 
 	return prj
