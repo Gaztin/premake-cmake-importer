@@ -54,6 +54,9 @@ function directory.deserializeProject( content, baseDir )
 		return str
 	end
 
+	-- Add predefined variables
+	variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
+
 	for i,cmd in ipairs( commandList ) do
 		if( cmd.name == 'project' ) then
 			local projectName = cmd.arguments[ 1 ]
