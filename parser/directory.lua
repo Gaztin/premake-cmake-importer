@@ -104,6 +104,7 @@ function directory.deserializeProject( content, baseDir )
 			local projectName    = table.remove( arguments, 1 )
 			local currentProject = p.api.scope.project
 			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
+			local modifiers      = { }
 
 			-- Make sure project exists
 			if( projectToAmend == nil ) then
@@ -115,21 +116,26 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Add source files
 			for _,arg in ipairs( arguments ) do
-				if( arg == 'SYSTEM' ) then
-				elseif( arg == 'BEFORE' ) then
-				elseif( arg == 'INTERFACE' ) then
-				elseif( arg == 'PUBLIC' ) then
-				elseif( arg == 'PRIVATE' ) then
+				if( arg == 'SYSTEM' or arg == 'BEFORE' or arg == 'INTERFACE' or arg == 'PUBLIC' or arg == 'PRIVATE' ) then
+					modifiers[ arg ] = true
 				else
+					local includeFunc = iif( modifiers[ 'SYSTEM' ] == true, sysincludedirs, includedirs )
+
+					if( modifiers[ 'BEFORE'    ] == true ) then p.warn( 'Unhandled modifier "BEFORE" was specified for "target_include_directories"'    ) end
+					if( modifiers[ 'INTERFACE' ] == true ) then p.warn( 'Unhandled modifier "INTERFACE" was specified for "target_include_directories"' ) end
+					if( modifiers[ 'PUBLIC'    ] == true ) then p.warn( 'Unhandled modifier "PUBLIC" was specified for "target_include_directories"'    ) end
+					if( modifiers[ 'PRIVATE'   ] == true ) then p.warn( 'Unhandled modifier "PRIVATE" was specified for "target_include_directories"'   ) end
+
 					arg = resolveVariables( arg )
 
 					for _,v in ipairs( string.explode( arg, ' ' ) ) do
 						local rebasedIncludeDir = path.rebase( v, baseDir, os.getcwd() )
 
-						includedirs { rebasedIncludeDir }
+						includeFunc { rebasedIncludeDir }
 					end
 
-					-- TODO: Reset modifiers
+					-- Reset modifiers
+					modifiers = { }
 				end
 
 			end
