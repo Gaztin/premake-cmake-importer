@@ -40,17 +40,51 @@ function directory.parse( filePath )
 end
 
 function directory.deserializeProject( content )
-	local commandList      = directory.deserializeCommandList( content )
-	local projectNameTable = table.filter( commandList, function( cmd ) return cmd.name == 'project' end )
-	local projectName      = 'CMakeProject'
+	local commandList     = directory.deserializeCommandList( content )
+	local projectCommands = table.filter( commandList, function( cmd ) return cmd.name == 'project' end )
+	local projectName     = 'CMakeProject'
 
-	if( #projectNameTable > 0 ) then
-		projectName = projectNameTable[ 1 ].arguments
+	if( #projectCommands > 0 ) then
+		projectName = projectCommands[ 1 ].arguments[ 1 ]
 	end
 
 	local prj = project( projectName )
 
-	kind( 'WindowedApp' )
+	local setCommands = table.filter( commandList, function( cmd ) return cmd.name == 'set' end )
+	local sets        = { }
+	for _,cmd in ipairs( setCommands ) do
+		local arguments = cmd.arguments
+		local setName   = table.remove( arguments, 1 )
+		sets[ setName ] = table.implode( arguments, '', '', ' ' )
+	end
+
+	local projectKind  = 'WindowedApp'
+	local projectFiles = { }
+
+	for i,cmd in ipairs( commandList ) do
+		if( cmd.name == 'add_executable' ) then
+			-- TODO: Add to given project at @cmd.arguments[ 1 ] instead of main project
+			local arguments         = cmd.arguments
+			local projectInQuestion = table.remove( arguments, 1 )
+
+			-- Resolve variables
+			arguments = table.implode( arguments, '', '', ' ' )
+			for k,v in pairs( sets ) do
+				local pattern = string.format( '${%s}', k )
+
+				arguments = string.gsub( arguments, pattern, v )
+			end
+
+			local sourceFiles = string.explode( arguments, ' ' )
+
+			table.insert( projectFiles, sourceFiles )
+		end
+	end
+
+	kind( projectKind )
+
+	-- TODO: Rebase project files to location of CMake directory
+	files( projectFiles )
 
 	return prj
 end
@@ -70,10 +104,11 @@ function directory.deserializeCommandList( content )
 		command.name               = string.match( command.name,      '^%s*(.*%S)%s*' ) or command.name
 		command.arguments          = string.match( command.arguments, '^%s*(.*%S)%s*' ) or command.arguments
 
+		-- Explode arguments into array
+		command.arguments          = string.explode( command.arguments, ' ' )
+
 		-- Store command
 		table.insert( commandList, command )
-
-		printf( '%s(%s)', command.name, command.arguments )
 
 		begin = nextRightParenthesis + 1
 	end
