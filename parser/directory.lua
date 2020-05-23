@@ -96,6 +96,44 @@ function directory.deserializeProject( content, baseDir )
 			-- Restore scope
 			p.api.scope.project = currentProject
 
+		elseif( cmd.name == 'target_include_directories' ) then
+			local arguments      = cmd.arguments
+			local projectName    = table.remove( arguments, 1 )
+			local currentProject = p.api.scope.project
+			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
+
+			-- Make sure project exists
+			if( projectToAmend == nil ) then
+				p.error( 'Project "%s" referenced in "add_executable" not found in workspace', addToProject )
+			end
+
+			-- Temporarily activate amended project
+			p.api.scope.project = projectToAmend
+
+			-- Add source files
+			for _,arg in ipairs( arguments ) do
+				if( arg == 'SYSTEM' ) then
+				elseif( arg == 'BEFORE' ) then
+				elseif( arg == 'INTERFACE' ) then
+				elseif( arg == 'PUBLIC' ) then
+				elseif( arg == 'PRIVATE' ) then
+				else
+					arg = resolveVariables( arg )
+
+					for _,v in ipairs( string.explode( arg, ' ' ) ) do
+						local rebasedIncludeDir = path.rebase( v, baseDir, os.getcwd() )
+
+						includedirs { rebasedIncludeDir }
+					end
+
+					-- TODO: Reset modifiers
+				end
+
+			end
+
+			-- Restore scope
+			p.api.scope.project = currentProject
+
 		else
 			-- Warn about unhandled command
 			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
