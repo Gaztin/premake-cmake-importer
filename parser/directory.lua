@@ -36,10 +36,12 @@ function directory.parse( filePath )
 
 	io.close( file )
 
-	return directory.deserializeProject( content )
+	local baseDir = path.getdirectory( filePath )
+
+	return directory.deserializeProject( content, baseDir )
 end
 
-function directory.deserializeProject( content )
+function directory.deserializeProject( content, baseDir )
 	local commandList     = directory.deserializeCommandList( content )
 	local projectCommands = table.filter( commandList, function( cmd ) return cmd.name == 'project' end )
 	local projectName     = 'CMakeProject'
@@ -76,8 +78,11 @@ function directory.deserializeProject( content )
 			end
 
 			local sourceFiles = string.explode( arguments, ' ' )
+			for i,v in ipairs( sourceFiles ) do
+				local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
 
-			table.insert( projectFiles, sourceFiles )
+				table.insert( projectFiles, rebasedSourceFile )
+			end
 		end
 	end
 
