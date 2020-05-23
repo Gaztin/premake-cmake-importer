@@ -40,8 +40,15 @@ function directory.parse( filePath )
 end
 
 function directory.deserializeProject( content )
-	local commandList = directory.deserializeCommandList( content )
-	local prj         = project( commandList[ 'project' ] or 'CMakeProject' )
+	local commandList      = directory.deserializeCommandList( content )
+	local projectNameTable = table.filter( commandList, function( cmd ) return cmd.name == 'project' end )
+	local projectName      = 'CMakeProject'
+
+	if( #projectNameTable > 0 ) then
+		projectName = projectNameTable[ 1 ].arguments
+	end
+
+	local prj = project( projectName )
 
 	kind( 'WindowedApp' )
 
@@ -55,18 +62,18 @@ function directory.deserializeCommandList( content )
 	while( begin < #content ) do
 		local nextLeftParenthesis  = string.find( content, '(', begin,               true )
 		local nextRightParenthesis = string.find( content, ')', nextLeftParenthesis, true )
-		local commandName          = string.sub( content, begin, nextLeftParenthesis - 1 )
-		local commandArguments     = string.sub( content, nextLeftParenthesis + 1, nextRightParenthesis - 1 )
+		local command              = { }
+		command.name               = string.sub( content, begin, nextLeftParenthesis - 1 )
+		command.arguments          = string.sub( content, nextLeftParenthesis + 1, nextRightParenthesis - 1 )
 
 		-- Trim surrounding whitespace
-		commandName      = string.match( commandName,      '^%s*(.*%S)%s*' ) or commandName
-		commandArguments = string.match( commandArguments, '^%s*(.*%S)%s*' ) or commandArguments
+		command.name               = string.match( command.name,      '^%s*(.*%S)%s*' ) or command.name
+		command.arguments          = string.match( command.arguments, '^%s*(.*%S)%s*' ) or command.arguments
 
 		-- Store command
---		commandList[ commandName ] = string.explode( commandArguments, ' ' )
-		commandList[ commandName ] = commandArguments
+		table.insert( commandList, command )
 
-		printf( '%s(%s)', commandName, commandArguments )
+		printf( '%s(%s)', command.name, command.arguments )
 
 		begin = nextRightParenthesis + 1
 	end
