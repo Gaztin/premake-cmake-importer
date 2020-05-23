@@ -142,7 +142,7 @@ function directory.deserializeProject( content, baseDir )
 
 	if( currentGroup ) then
 		-- Restore current group
-		group( currentGroup )
+		p.api.scope.group = currentGroup
 	end
 end
 
