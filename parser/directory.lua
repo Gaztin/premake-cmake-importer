@@ -59,7 +59,10 @@ function directory.deserializeProject( content, baseDir )
 	variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
 
 	for i,cmd in ipairs( commandList ) do
-		if( cmd.name == 'project' ) then
+		if( cmd.name == 'cmake_minimum_required' ) then
+			-- Do nothing
+			
+		elseif( cmd.name == 'project' ) then
 			local groupName = cmd.arguments[ 1 ]
 
 			group( groupName )
