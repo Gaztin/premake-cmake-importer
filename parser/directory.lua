@@ -45,6 +45,7 @@ function directory.deserializeProject( content, baseDir )
 	local commandList  = directory.deserializeCommandList( content )
 	local currentGroup = p.api.scope.group
 	local variables    = { }
+	local aliases      = { }
 
 	local function resolveVariables( str )
 		for k,v in pairs( variables ) do
@@ -55,13 +56,22 @@ function directory.deserializeProject( content, baseDir )
 		return str
 	end
 
+	local function resolveAlias( name )
+		for k,v in pairs( aliases ) do
+			if( k == name ) then
+				return v
+			end
+		end
+		return name
+	end
+
 	-- Add predefined variables
 	variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
 
 	for i,cmd in ipairs( commandList ) do
 		if( cmd.name == 'cmake_minimum_required' ) then
 			-- Do nothing
-			
+
 		elseif( cmd.name == 'project' ) then
 			local groupName = cmd.arguments[ 1 ]
 
@@ -75,67 +85,95 @@ function directory.deserializeProject( content, baseDir )
 			variables[ variableName ] = table.implode( arguments, '', '', ' ' )
 
 		elseif( cmd.name == 'add_executable' ) then
-			local arguments   = cmd.arguments
-			local projectName = table.remove( arguments, 1 )
-			local modifiers   = { }
-			local prj         = project( projectName )
+			local arguments = cmd.arguments
 
-			kind( 'ConsoleApp' )
-			location( baseDir )
+			if( arguments[ 2 ] == 'IMPORTED' ) then
 
-			prj._cmake = { }
+				p.error( 'Executable is an IMPORTED target, which is unsupported' )
 
-			for _,arg in ipairs( arguments ) do
-				if( table.contains( { 'WIN32', 'MACOSX_BUNDLE', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'ALIAS' }, arg ) ) then
-					if( arg == 'WIN32' ) then
+			elseif( arguments[ 2 ] == 'ALIAS' ) then
+
+				-- Add alias
+				aliases[ arguments[ 1 ] ] = arguments[ 3 ]
+
+			else
+				local prj  = project( arguments[ 1 ] )
+				prj._cmake = { }
+
+				kind( 'ConsoleApp' )
+				location( baseDir )
+
+				for i=2,#arguments do
+					if( arguments[ i ] == 'WIN32' ) then
 						kind( 'WindowedApp' )
+					elseif( arguments[ i ] == 'MACOSX_BUNDLE' ) then
+						-- TODO: https://cmake.org/cmake/help/v3.0/prop_tgt/MACOSX_BUNDLE.html
 					else
-						p.warn( 'Unhandled modifier "%s" for command "%s"', arg, cmd.name )
-					end
-				else
-					arg = resolveVariables( arg )
+						local f = resolveVariables( arguments[ i ] )
 
-					for _,v in ipairs( string.explode( arg, ' ' ) ) do
-						local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+						for _,v in ipairs( string.explode( f, ' ' ) ) do
+							local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
 
-						files { rebasedSourceFile }
+							files { rebasedSourceFile }
+						end
 					end
 				end
 			end
 
 		elseif( cmd.name == 'add_library' ) then
-			local arguments   = cmd.arguments
-			local projectName = table.remove( arguments, 1 )
-			local modifiers   = { }
-			local prj         = project( projectName )
+			local arguments = cmd.arguments
 
-			location( baseDir )
+			if( table.contains( { 'STATIC', 'SHARED', 'MODULE' }, arguments[ 2 ] ) ) then
 
-			prj._cmake = { }
+				-- Unused or unsupported modifiers
+				if( arguments[ 3 ] == 'EXCLUDE_FROM_ALL' ) then
+					table.remove( arguments, 3 )
+				elseif( arguments[ 3 ] == 'IMPORTED' ) then
+					p.error( 'Library uses unsupported modifier "%s"', arguments[ 3 ] )
+				end
 
-			for _,arg in ipairs( arguments ) do
-				if( table.contains( { 'STATIC', 'SHARED', 'MODULE', 'UNKNOWN', 'EXCLUDE_FROM_ALL', 'IMPORTED', 'OBJECT', 'ALIAS', 'INTERFACE' }, arg ) ) then
-					if( arg == 'STATIC' ) then
-						kind( 'StaticLib' )
-					elseif( arg == 'SHARED' ) then
-						kind( 'SharedLib' )
-					else
-						p.warn( 'Unhandled modifier "%s" for command "%s"', arg, cmd.name )
-					end
-				else
-					arg = resolveVariables( arg )
+				local prj  = project( arguments[ 1 ] )
+				prj._cmake = { }
 
-					for _,v in ipairs( string.explode( arg, ' ' ) ) do
+				location( baseDir )
+
+				-- Library type
+				if( arguments[ 2 ] == 'STATIC' ) then
+					kind( 'StaticLib' )
+				elseif( arguments[ 2 ] == 'SHARED' ) then
+					kind( 'SharedLib' )
+				elseif( arguments[ 2 ] == 'MODULE' ) then
+					p.error( 'Project uses unsupported library type "%s"', arguments[ 2 ] )
+				end
+
+				for i=3,#arguments do
+					local f = resolveVariables( arguments[ i ] )
+
+					for _,v in ipairs( string.explode( f, ' ' ) ) do
 						local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
 
 						files { rebasedSourceFile }
 					end
 				end
+
+			elseif( arguments[ 2 ] == 'OBJECT' ) then
+
+				p.error( 'Library is an object library, which is unsupported' )
+
+			elseif( arguments[ 2 ] == 'ALIAS' ) then
+
+				-- Add alias
+				aliases[ arguments[ 1 ] ] = arguments[ 3 ]
+
+			elseif( arguments[ 2 ] == 'INTERFACE' ) then
+
+				p.error( 'Library is an interface library, which is unsupported' )
+
 			end
 
 		elseif( cmd.name == 'target_include_directories' ) then
 			local arguments      = cmd.arguments
-			local projectName    = table.remove( arguments, 1 )
+			local projectName    = resolveAlias( table.remove( arguments, 1 ) )
 			local currentProject = p.api.scope.project
 			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
 			local modifiers      = { }
@@ -187,7 +225,7 @@ function directory.deserializeProject( content, baseDir )
 
 		elseif( cmd.name == 'target_link_libraries' ) then
 			local arguments      = cmd.arguments
-			local projectName    = table.remove( arguments, 1 )
+			local projectName    = resolveAlias( table.remove( arguments, 1 ) )
 			local currentProject = p.api.scope.project
 			local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
 			local modifiers      = { }
