@@ -246,7 +246,8 @@ function directory.deserializeProject( content, baseDir )
 					arg = resolveVariables( arg )
 
 					for _,v in ipairs( string.explode( arg, ' ' ) ) do
-						local prj = p.workspace.findproject( p.api.scope.workspace, v )
+						local targetName = resolveAlias( v )
+						local prj        = p.workspace.findproject( p.api.scope.workspace, targetName )
 
 						-- Add includedirs marked PUBLIC
 						if( prj and prj._cmake ) then
@@ -262,7 +263,7 @@ function directory.deserializeProject( content, baseDir )
 							end
 						end
 
-						links { v }
+						links { targetName }
 					end
 
 					-- Reset modifiers
