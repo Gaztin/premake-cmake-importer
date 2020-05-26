@@ -56,6 +56,16 @@ function directory.deserializeProject( content, baseDir )
 		return str
 	end
 
+	local function evaluateVariable( name )
+		for k,v in pairs( variables ) do
+			if( k == name ) then
+				return v
+			end
+		end
+
+		return m.NOTFOUND
+	end
+
 	local function resolveAlias( name )
 		for k,v in pairs( aliases ) do
 			if( k == name ) then
