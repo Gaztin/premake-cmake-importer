@@ -280,6 +280,11 @@ function directory.deserializeProject( content, baseDir )
 			-- Skip installation rules
 			p.warnOnce( p.api.scope.project, string.format( 'Skipping installation rules for project "%s"', p.api.scope.project.name ) )
 
+		elseif( cmd.name == 'message' ) then
+
+			-- Print message
+			printf( '[CMake]: %s', table.implode( cmd.arguments, '', '', ' ' ) )
+
 		else
 			-- Warn about unhandled command
 			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
