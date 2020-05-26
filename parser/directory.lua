@@ -66,6 +66,34 @@ function directory.deserializeProject( content, baseDir )
 		return m.NOTFOUND
 	end
 
+	local function isConstantTrue( value )
+		if( value == nil ) then
+			return false
+		end
+
+		local t = type( value )
+
+		if( t == 'boolean' ) then
+			return value
+		elseif( t == 'number' ) then
+			return ( value ~= 0 )
+		elseif( t == 'string') then
+			if( ( value == m.ON ) or ( value == m.YES ) or ( value == m.TRUE ) or ( value == m.Y ) ) then
+				return true
+			elseif( ( value == m.OFF ) or ( value == m.NO ) or ( value == m.FALSE ) or ( value == m.N ) or ( value == m.IGNORE ) or ( value == m.NOTFOUND ) ) then
+				return false
+			end
+
+			p.error( 'String constant "%s" cannot be evaluated to either true or false', value )
+
+			return false
+		end
+
+		p.error( '"%s" is not an eligible type for a CMake constant', t )
+
+		return false
+	end
+
 	local function resolveAlias( name )
 		for k,v in pairs( aliases ) do
 			if( k == name ) then
