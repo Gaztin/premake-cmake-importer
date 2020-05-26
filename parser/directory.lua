@@ -323,9 +323,48 @@ function directory.deserializeProject( content, baseDir )
 			-- Print message
 			printf( '[CMake]: %s', table.implode( cmd.arguments, '', '', ' ' ) )
 
+		elseif( cmd.name == 'if' ) then
+			local unary_tests = {
+				'EXISTS', 'COMMAND', 'DEFINED',
+			}
+			local binary_tests = {
+				'EQUAL',              'LESS',             'LESS_EQUAL',            'GREATER',
+				'GREATER_EQUAL',      'STREQUAL',         'STRLESS',               'STRLESS_EQUAL',
+				'STRGREATER',         'STRGREATER_EQUAL', 'VERSION_EQUAL',         'VERSION_LESS',
+				'VERSION_LESS_EQUAL', 'VERSION_GREATER',  'VERSION_GREATER_EQUAL', 'MATCHES',
+			}
+			local bool_ops = {
+				'NOT', 'AND', 'OR',
+			}
+			local all_ops   = table.join( unary_tests, binary_tests, bool_ops )
+			local constants = { }
+
+			-- Look for constants
+			for i=1,#cmd.arguments do
+				local is_unary_test  = table.contains( unary_tests, cmd.arguments[ i ] )
+				local is_binary_test = table.contains( binary_tests, cmd.arguments[ i ] )
+				local is_bool_op     = table.contains( bool_ops, cmd.arguments[ i ] )
+				local is_constant    = not ( is_unary_test or is_binary_test or is_bool_op )
+
+				if( is_constant ) then
+					local const = { }
+
+					const.name  = cmd.arguments[ i ]
+					const.eval  = evaluateVariable( cmd.arguments[ i ] )
+					const.bool  = isConstantTrue( const.eval )
+					const.index = i
+
+					p.info( '"%s" evaluates to %s', const.name, tostring( const.bool ) )
+
+					table.insert( constants, const )
+				end
+			end
+
 		else
+
 			-- Warn about unhandled command
 			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
+
 		end
 	end
 
