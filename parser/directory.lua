@@ -56,7 +56,7 @@ function directory.deserializeProject( content, baseDir )
 		return str
 	end
 
-	local function evaluateVariable( name )
+	local function expandVariable( name )
 		for k,v in pairs( variables ) do
 			if( k == name ) then
 				return v
@@ -363,8 +363,17 @@ function directory.deserializeProject( content, baseDir )
 				if( is_constant ) then
 					local const = { }
 
-					const.name  = cmd.arguments[ i ]
-					const.eval  = evaluateVariable( cmd.arguments[ i ] )
+					const.name = cmd.arguments[ i ]
+
+					-- Determine what type the constant is
+					if( string.sub( cmd.arguments[ i ], 1, 1 ) == '"' ) then
+						const.eval = cmd.arguments[ i ]
+					elseif( tonumber( cmd.arguments[ i ] ) ~= nil ) then
+						const.eval = tonumber( cmd.arguments[ i ] )
+					else
+						const.eval = expandVariable( cmd.arguments[ i ] )
+					end
+
 					const.bool  = isConstantTrue( const.eval )
 					const.index = i
 
@@ -396,7 +405,65 @@ function directory.deserializeProject( content, baseDir )
 				end
 			end
 
-			-- TODO: Binary tests
+			-- Binary tests
+			local i            = 0
+			local newConstants = { }
+
+			while( i < #constants ) do
+				i         = i + 1
+				local lhs = constants[ i ]
+
+				if( lhs.index < #cmd.arguments ) then
+					local binary_test    = cmd.arguments[ lhs.index + 1 ]
+					local do_binary_test = table.contains( binary_tests, binary_test )
+
+					if( do_binary_test and i < #constants ) then
+						local rhs    = constants[ i + 1 ]
+						local result = nil
+
+						if( binary_test == 'EQUAL'                 ) then result = ( lhs.eval == rhs.eval ) end
+						if( binary_test == 'LESS'                  ) then result = ( lhs.eval < rhs.eval  ) end
+						if( binary_test == 'LESS_EQUAL'            ) then result = ( lhs.eval <= rhs.eval ) end
+						if( binary_test == 'GREATER'               ) then result = ( lhs.eval > rhs.eval  ) end
+						if( binary_test == 'GREATER_EQUAL'         ) then result = ( lhs.eval >= rhs.eval ) end
+--							if( binary_test == 'STREQUAL'              ) then result = ( lhs.eval == rhs.eval ) end
+--							if( binary_test == 'STRLESS'               ) then result = ( lhs.eval < rhs.eval  ) end
+--							if( binary_test == 'STRLESS_EQUAL'         ) then result = ( lhs.eval <= rhs.eval ) end
+--							if( binary_test == 'STRGREATER'            ) then result = ( lhs.eval > rhs.eval  ) end
+--							if( binary_test == 'STRGREATER_EQUAL'      ) then result = ( lhs.eval >= rhs.eval ) end
+--							if( binary_test == 'VERSION_EQUAL'         ) then result = ( lhs.eval == rhs.eval ) end
+--							if( binary_test == 'VERSION_LESS'          ) then result = ( lhs.eval < rhs.eval  ) end
+--							if( binary_test == 'VERSION_LESS_EQUAL'    ) then result = ( lhs.eval <= rhs.eval ) end
+--							if( binary_test == 'VERSION_GREATER'       ) then result = ( lhs.eval > rhs.eval  ) end
+--							if( binary_test == 'VERSION_GREATER_EQUAL' ) then result = ( lhs.eval >= rhs.eval ) end
+--							if( binary_test == 'MATCHES'               ) then result = ( lhs.eval == rhs.eval ) end
+
+						if( result ~= nil ) then
+							local const  = {
+								name=string.format( '(%s %s %s)', tostring( lhs.eval ), binary_test, tostring( rhs.eval ) ),
+								eval=result,
+								bool=result,
+								index=#newConstants
+							}
+
+							table.insert( newConstants, const )
+
+							-- Skip rhs for next iteration
+							i = i + 1
+						end
+					else
+						local const = { name=lhs.name, eval=lhs.eval, bool=lhs.bool, index=#newConstants }
+
+						table.insert( newConstants, const )
+					end
+				else
+					local const = { name=lhs.name, eval=lhs.eval, bool=lhs.bool, index=#newConstants }
+
+					table.insert( newConstants, const )
+				end
+			end
+
+			constants = newConstants
 
 			-- Boolean NOT operation
 			for _,const in ipairs( constants ) do
