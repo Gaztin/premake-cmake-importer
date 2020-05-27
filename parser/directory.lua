@@ -371,6 +371,24 @@ function directory.deserializeProject( content, baseDir )
 			-- TODO: Inner parentheses
 
 			-- Unary tests
+			for _,const in ipairs( constants ) do
+				if( const.index > 1 ) then
+					local unary_test    = cmd.arguments[ const.index - 1 ]
+					local do_unary_test = table.contains( unary_tests, unary_test )
+
+					if( do_unary_test ) then
+						if( unary_test == 'EXISTS' ) then
+							-- TODO: Implement EXISTS
+							const.bool = false
+						elseif( unary_test == 'COMMAND' ) then
+							-- TODO: Implement COMMAND
+							const.bool = false
+						elseif( unary_test == 'DEFINED' ) then
+							const.bool = ( ( const.eval ~= nil ) and ( const.eval ~= m.NOTFOUND ) )
+						end
+					end
+				end
+			end
 
 			-- TODO: Binary tests
 
