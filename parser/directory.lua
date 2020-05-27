@@ -426,17 +426,17 @@ function directory.deserializeProject( content, baseDir )
 						if( binary_test == 'LESS_EQUAL'            ) then result = ( lhs.eval <= rhs.eval ) end
 						if( binary_test == 'GREATER'               ) then result = ( lhs.eval > rhs.eval  ) end
 						if( binary_test == 'GREATER_EQUAL'         ) then result = ( lhs.eval >= rhs.eval ) end
---							if( binary_test == 'STREQUAL'              ) then result = ( lhs.eval == rhs.eval ) end
---							if( binary_test == 'STRLESS'               ) then result = ( lhs.eval < rhs.eval  ) end
---							if( binary_test == 'STRLESS_EQUAL'         ) then result = ( lhs.eval <= rhs.eval ) end
---							if( binary_test == 'STRGREATER'            ) then result = ( lhs.eval > rhs.eval  ) end
---							if( binary_test == 'STRGREATER_EQUAL'      ) then result = ( lhs.eval >= rhs.eval ) end
---							if( binary_test == 'VERSION_EQUAL'         ) then result = ( lhs.eval == rhs.eval ) end
---							if( binary_test == 'VERSION_LESS'          ) then result = ( lhs.eval < rhs.eval  ) end
---							if( binary_test == 'VERSION_LESS_EQUAL'    ) then result = ( lhs.eval <= rhs.eval ) end
---							if( binary_test == 'VERSION_GREATER'       ) then result = ( lhs.eval > rhs.eval  ) end
---							if( binary_test == 'VERSION_GREATER_EQUAL' ) then result = ( lhs.eval >= rhs.eval ) end
---							if( binary_test == 'MATCHES'               ) then result = ( lhs.eval == rhs.eval ) end
+--						if( binary_test == 'STREQUAL'              ) then result = ( lhs.eval == rhs.eval ) end
+--						if( binary_test == 'STRLESS'               ) then result = ( lhs.eval < rhs.eval  ) end
+--						if( binary_test == 'STRLESS_EQUAL'         ) then result = ( lhs.eval <= rhs.eval ) end
+--						if( binary_test == 'STRGREATER'            ) then result = ( lhs.eval > rhs.eval  ) end
+--						if( binary_test == 'STRGREATER_EQUAL'      ) then result = ( lhs.eval >= rhs.eval ) end
+--						if( binary_test == 'VERSION_EQUAL'         ) then result = ( lhs.eval == rhs.eval ) end
+--						if( binary_test == 'VERSION_LESS'          ) then result = ( lhs.eval < rhs.eval  ) end
+--						if( binary_test == 'VERSION_LESS_EQUAL'    ) then result = ( lhs.eval <= rhs.eval ) end
+--						if( binary_test == 'VERSION_GREATER'       ) then result = ( lhs.eval > rhs.eval  ) end
+--						if( binary_test == 'VERSION_GREATER_EQUAL' ) then result = ( lhs.eval >= rhs.eval ) end
+--						if( binary_test == 'MATCHES'               ) then result = ( lhs.eval == rhs.eval ) end
 
 						if( result ~= nil ) then
 							local const  = {
