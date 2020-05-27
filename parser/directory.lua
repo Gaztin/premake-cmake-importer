@@ -374,7 +374,6 @@ function directory.deserializeProject( content, baseDir )
 						const.eval = expandVariable( cmd.arguments[ i ] )
 					end
 
-					const.bool  = isConstantTrue( const.eval )
 					const.index = i
 
 					table.insert( constants, const )
@@ -394,12 +393,12 @@ function directory.deserializeProject( content, baseDir )
 					if( do_unary_test ) then
 						if( unary_test == 'EXISTS' ) then
 							-- TODO: Implement EXISTS
-							const.bool = false
+							const.eval = false
 						elseif( unary_test == 'COMMAND' ) then
 							-- TODO: Implement COMMAND
-							const.bool = false
+							const.eval = false
 						elseif( unary_test == 'DEFINED' ) then
-							const.bool = ( ( const.eval ~= nil ) and ( const.eval ~= m.NOTFOUND ) )
+							const.eval = ( ( const.eval ~= nil ) and ( const.eval ~= m.NOTFOUND ) )
 						end
 					end
 				end
@@ -442,7 +441,6 @@ function directory.deserializeProject( content, baseDir )
 							local const  = {
 								name=string.format( '(%s %s %s)', tostring( lhs.eval ), binary_test, tostring( rhs.eval ) ),
 								eval=result,
-								bool=result,
 								index=#newConstants
 							}
 
@@ -452,12 +450,12 @@ function directory.deserializeProject( content, baseDir )
 							i = i + 1
 						end
 					else
-						local const = { name=lhs.name, eval=lhs.eval, bool=lhs.bool, index=#newConstants }
+						local const = { name=lhs.name, eval=lhs.eval, index=#newConstants }
 
 						table.insert( newConstants, const )
 					end
 				else
-					local const = { name=lhs.name, eval=lhs.eval, bool=lhs.bool, index=#newConstants }
+					local const = { name=lhs.name, eval=lhs.eval, index=#newConstants }
 
 					table.insert( newConstants, const )
 				end
@@ -471,7 +469,7 @@ function directory.deserializeProject( content, baseDir )
 					local do_negate = cmd.arguments[ const.index - 1 ] == 'NOT'
 
 					if( do_negate ) then
-						const.bool = not const.bool
+						const.eval = not isConstantTrue( const.eval )
 					end
 				end
 			end
@@ -479,8 +477,8 @@ function directory.deserializeProject( content, baseDir )
 			-- Boolean AND operation
 			for i=1,#constants do
 				if( i < #constants ) then
-					local lhs = constants[ i ].bool
-					local rhs = constants[ i + 1 ].bool
+					local lhs = isConstantTrue( constants[ i ].eval )
+					local rhs = isConstantTrue( constants[ i + 1 ].eval )
 
 					new_test = new_test and ( lhs and rhs )
 				end
@@ -489,8 +487,8 @@ function directory.deserializeProject( content, baseDir )
 			-- Boolean OR operation
 			for i=1,#constants do
 				if( i < #constants ) then
-					local lhs = constants[ i ].bool
-					local rhs = constants[ i + 1 ].bool
+					local lhs = isConstantTrue( constants[ i ].eval )
+					local rhs = isConstantTrue( constants[ i + 1 ].eval )
 
 					new_test = new_test and ( lhs or rhs )
 				end
@@ -498,7 +496,7 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Fix single constant without relationships
 			if( #constants == 1 ) then
-				new_test = constants[ 1 ].bool
+				new_test = isConstantTrue( constants[ 1 ].eval )
 			end
 
 			table.insert( tests, new_test )
