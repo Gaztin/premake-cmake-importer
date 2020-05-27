@@ -437,11 +437,12 @@ function directory.deserializeProject( content, baseDir )
 --						if( binary_test == 'VERSION_GREATER_EQUAL' ) then result = ( lhs.eval >= rhs.eval ) end
 --						if( binary_test == 'MATCHES'               ) then result = ( lhs.eval == rhs.eval ) end
 
+						-- TODO: index should be index in argument list, which it is not apart of. this is a problem..
 						if( result ~= nil ) then
 							local const  = {
 								name=string.format( '(%s %s %s)', tostring( lhs.eval ), binary_test, tostring( rhs.eval ) ),
 								eval=result,
-								index=#newConstants
+								index=lhs.index
 							}
 
 							table.insert( newConstants, const )
@@ -450,12 +451,12 @@ function directory.deserializeProject( content, baseDir )
 							i = i + 1
 						end
 					else
-						local const = { name=lhs.name, eval=lhs.eval, index=#newConstants }
+						local const = { name=lhs.name, eval=lhs.eval, index=lhs.index }
 
 						table.insert( newConstants, const )
 					end
 				else
-					local const = { name=lhs.name, eval=lhs.eval, index=#newConstants }
+					local const = { name=lhs.name, eval=lhs.eval, index=lhs.index }
 
 					table.insert( newConstants, const )
 				end
