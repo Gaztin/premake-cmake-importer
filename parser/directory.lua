@@ -331,6 +331,13 @@ function directory.deserializeProject( content, baseDir )
 			printf( '[CMake]: %s', table.implode( cmd.arguments, '', '', ' ' ) )
 
 		elseif( ( cmd.name == 'if' ) or ( cmd.name == 'elseif' ) ) then
+
+			-- Don't evaluate elseif if any previous tests were successful
+			if( cmd.name == 'elseif' and table.contains( tests, true ) ) then
+				table.insert( tests, false )
+				goto continue
+			end
+
 			local unary_tests = {
 				'EXISTS', 'COMMAND', 'DEFINED',
 			}
