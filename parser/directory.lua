@@ -104,7 +104,6 @@ function directory.deserializeProject( content, baseDir )
 	-- Add predefined variables
 	variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
 
---	local test = true
 	local tests = { }
 
 	for _,cmd in ipairs( commandList ) do
@@ -392,11 +391,40 @@ function directory.deserializeProject( content, baseDir )
 
 			-- TODO: Binary tests
 
-			-- TODO: Boolean operations
-
-			-- Sum up evals
+			-- Boolean NOT operation
 			for _,const in ipairs( constants ) do
-				new_test = new_test and const.bool
+				if( const.index > 1 ) then
+					local do_negate = cmd.arguments[ const.index - 1 ] == 'NOT'
+
+					if( do_negate ) then
+						const.bool = not const.bool
+					end
+				end
+			end
+
+			-- Boolean AND operation
+			for i=1,#constants do
+				if( i < #constants ) then
+					local lhs = constants[ i ].bool
+					local rhs = constants[ i + 1 ].bool
+
+					new_test = new_test and ( lhs and rhs )
+				end
+			end
+
+			-- Boolean OR operation
+			for i=1,#constants do
+				if( i < #constants ) then
+					local lhs = constants[ i ].bool
+					local rhs = constants[ i + 1 ].bool
+
+					new_test = new_test and ( lhs or rhs )
+				end
+			end
+
+			-- Fix single constant without relationships
+			if( #constants == 1 ) then
+				new_test = constants[ 1 ].bool
 			end
 
 			table.insert( tests, new_test )
