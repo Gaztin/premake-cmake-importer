@@ -465,6 +465,15 @@ function directory.deserializeProject( content, baseDir )
 
 			-- Boolean NOT operation
 			for _,const in ipairs( constants ) do
+				if( const.index > 2 ) then
+					local unary_is_before = table.contains( unary_tests, cmd.arguments[ const.index - 1 ] )
+					local negate_unary    = cmd.arguments[ const.index - 2 ] == 'NOT'
+
+					if( unary_is_before and negate_unary ) then
+						-- Unary should already be evaluated into eval here
+						const.eval = not isConstantTrue( const.eval )
+					end
+				end
 				if( const.index > 1 ) then
 					local do_negate = cmd.arguments[ const.index - 1 ] == 'NOT'
 
