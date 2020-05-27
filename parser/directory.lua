@@ -104,7 +104,17 @@ function directory.deserializeProject( content, baseDir )
 	-- Add predefined variables
 	variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
 
-	for i,cmd in ipairs( commandList ) do
+--	local test = true
+	local tests = { }
+
+	for _,cmd in ipairs( commandList ) do
+		local last_test = iif( #tests > 0, tests[ #tests ], true )
+
+		-- Skip commands if last test failed
+		if( ( not last_test ) and ( cmd.name ~= 'elseif' ) and ( cmd.name ~= 'else' ) and ( cmd.name ~= 'endif' ) ) then
+			goto continue
+		end
+
 		if( cmd.name == 'cmake_minimum_required' ) then
 			-- Do nothing
 
@@ -321,7 +331,7 @@ function directory.deserializeProject( content, baseDir )
 			-- Print message
 			printf( '[CMake]: %s', table.implode( cmd.arguments, '', '', ' ' ) )
 
-		elseif( cmd.name == 'if' ) then
+		elseif( ( cmd.name == 'if' ) or ( cmd.name == 'elseif' ) ) then
 			local unary_tests = {
 				'EXISTS', 'COMMAND', 'DEFINED',
 			}
@@ -352,11 +362,35 @@ function directory.deserializeProject( content, baseDir )
 					const.bool  = isConstantTrue( const.eval )
 					const.index = i
 
-					p.info( '"%s" evaluates to %s', const.name, tostring( const.bool ) )
-
 					table.insert( constants, const )
 				end
 			end
+
+			local new_test = true
+
+			-- TODO: Inner parentheses
+
+			-- Unary tests
+
+			-- TODO: Binary tests
+
+			-- TODO: Boolean operations
+
+			-- Sum up evals
+			for _,const in ipairs( constants ) do
+				new_test = new_test and const.bool
+			end
+
+			table.insert( tests, new_test )
+
+		elseif( cmd.name == 'else' ) then
+
+			table.insert( tests, not table.contains( tests, true ) )
+
+		elseif( cmd.name == 'endif' ) then
+
+			-- Reset tests
+			tests = { }
 
 		else
 
@@ -364,6 +398,10 @@ function directory.deserializeProject( content, baseDir )
 			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
 
 		end
+
+		-- Continue label
+		::continue::
+
 	end
 
 	if( currentGroup ) then
