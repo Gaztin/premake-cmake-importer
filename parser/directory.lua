@@ -84,9 +84,7 @@ function directory.deserializeProject( content, baseDir )
 				return false
 			end
 
-			p.error( 'String constant "%s" cannot be evaluated to either true or false', value )
-
-			return false
+			return isConstantTrue( tonumber( value ) )
 		end
 
 		p.error( '"%s" is not an eligible type for a CMake constant', t )
