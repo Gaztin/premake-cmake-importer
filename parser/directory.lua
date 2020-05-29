@@ -136,8 +136,8 @@ function directory.deserializeProject( content, baseDir )
 
 	-- Add predefined variables
 	m.scope.variables = { }
-	m.scope.variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
-	-- TODO: Set CMAKE_CONFIGURATION_TYPES to @p.api.scope.workspace.configurations
+	m.scope.variables[ 'PROJECT_SOURCE_DIR'        ] = baseDir
+	m.scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
 
 	local tests = { }
 
