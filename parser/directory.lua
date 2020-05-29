@@ -117,7 +117,7 @@ function directory.deserializeProject( content, baseDir )
 				return false
 			end
 
-			return isConstantTrue( tonumber( value ) )
+			return ( string.len( value ) > 0 )
 		end
 
 		p.error( '"%s" is not an eligible type for a CMake constant', t )
