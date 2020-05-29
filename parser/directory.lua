@@ -52,9 +52,11 @@ function directory.parse( filePath )
 end
 
 function directory.deserializeProject( content, baseDir )
-	local commandList  = directory.deserializeCommandList( content )
-	local currentGroup = p.api.scope.group
-	local aliases      = { }
+	local commandList           = directory.deserializeCommandList( content )
+	local currentGroup          = p.api.scope.group
+	local aliases               = { }
+	local cache_entries         = { }
+	local cache_entries_allowed = { }
 
 	-- Create new scope inside the current scope, if there is one
 	if( m.scope ~= nil ) then
@@ -147,8 +149,59 @@ function directory.deserializeProject( content, baseDir )
 		elseif( cmd.name == 'set' ) then
 			local arguments    = cmd.arguments
 			local variableName = table.remove( arguments, 1 )
+			local values       = { }
+			local parentScope  = false
+			local isCache      = false
 
+			local i = 0
+			while( i < #arguments ) do
+				i = i + 1
+
+				if( arguments[ i ] == 'PARENT_SCOPE' ) then
+					parentScope = true
+
+				elseif( arguments[ i ] == 'CACHE' ) then
+					local entrytype = arguments[ i + 1 ]
+					local docstring = arguments[ i + 2 ]
+					local force     = false
+					i = i + 2
+
+					isCache = true
+
+					while( i < #arguments ) do
+						i = i + 1
+
+						if( arguments[ i ] == 'FORCE' ) then
+							force = true
+						else
+							p.warn( 'Unhandled cache option "%s" for command "%s"', arguments[ i ], cmd.name )
+						end
+					end
+
+					if( cache_entries[ variableName ] == nil or force ) then
+						cache_entries[ variableName ] = table.implode( values, '', '', ' ' )
+					end
+
+				else
+					table.insert( values, arguments[ i ] )
+				end
+			end
+
+			if( not isCache ) then
+
+				-- Store variable normally
+				if( parentScope ) then
+
+					-- Store in parent scope
+					if( m.scope.parent ~= nil ) then
+						m.scope.parent.variables[ variableName ] = table.implode( values, '', '', ' ' )
+					else
+						p.warn( 'PARENT_SCOPE was provided for command "%s", but no parent scope was present', cmd.name )
+					end
+				else
 					m.scope.variables[ variableName ] = table.implode( values, '', '', ' ' )
+				end
+			end
 
 		elseif( cmd.name == 'add_executable' ) then
 			local arguments = cmd.arguments
@@ -353,13 +406,12 @@ function directory.deserializeProject( content, baseDir )
 
 		elseif( cmd.name == 'set_property' ) then
 
-			local index                  = 1
-			local scope                  = cmd.arguments[ index ]
-			local propertyHandler        = nil
-			local meta                   = nil
-			local options                = { 'APPEND', 'APPEND_STRING' }
-			local possible_entries_table = { }
-			index                        = index + 1
+			local index           = 1
+			local scope           = cmd.arguments[ index ]
+			local propertyHandler = nil
+			local meta            = nil
+			local options         = { 'APPEND', 'APPEND_STRING' }
+			index                 = index + 1
 
 			if( scope == 'GLOBAL' ) then
 				propertyHandler = function( meta, property, values )
@@ -437,7 +489,7 @@ function directory.deserializeProject( content, baseDir )
 				propertyHandler = function( entries, property, values )
 					if( property == 'STRINGS' ) then
 						for _,entry in ipairs( entries ) do
-							possible_entries_table[ entry ] = values
+							cache_entries_allowed[ entry ] = values
 						end
 					else
 						p.warn( 'Unhandled property %s in CACHE scope', property )
@@ -480,23 +532,6 @@ function directory.deserializeProject( content, baseDir )
 			end
 
 			propertyHandler( meta, property, values )
-
-			for entry,possible_values in pairs( possible_entries_table ) do
-				if( entry == 'CMAKE_BUILD_TYPE' ) then
-
-					-- Remove surrounding quotation marks
-					for i = 1, #possible_values do
-						possible_values[ i ] = string.gsub( possible_values[ i ], '"(.*)"', '%1' )
-					end
-
-					-- Replace possible configurations
-					removeconfigurations { '*' }
-					configurations( possible_values )
-
-				else
-					p.warn( 'Unhandled possible values for entry %s: [%s]', entry, table.implode( possible_values, '', '', ', ' ) )
-				end
-			end
 
 		elseif( ( cmd.name == 'if' ) or ( cmd.name == 'elseif' ) ) then
 
@@ -733,6 +768,26 @@ function directory.deserializeProject( content, baseDir )
 		-- Continue label
 		::continue::
 
+	end
+
+	-- TODO: Validate allowed cache entries against allowed cache entries
+
+	-- Handle allowed cache entries
+	for entry,allowed in pairs( cache_entries_allowed ) do
+		if( entry == 'CMAKE_BUILD_TYPE' ) then
+
+			-- Remove surrounding quotation marks
+			for i = 1, #allowed do
+				allowed[ i ] = string.gsub( allowed[ i ], '"(.*)"', '%1' )
+			end
+
+			-- Replace allowed configurations
+			removeconfigurations { '*' }
+			configurations( allowed )
+
+		else
+			p.warn( 'Unhandled allowed values for entry %s: [%s]', entry, table.implode( allowed, '', '', ', ' ) )
+		end
 	end
 
 	if( currentGroup ) then
