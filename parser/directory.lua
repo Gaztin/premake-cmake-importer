@@ -824,7 +824,6 @@ function directory.deserializeCommandList( content )
 		argString    = string.match( argString,    '^%s*(.*%S)%s*' ) or argString
 
 		local it        = nextLeftParenthesis + 1
-		local nextSpace = string.find( content, ' ', nextLeftParenthesis, true )
 		while( it and it < nextRightParenthesis ) do
 			local leftQuotationMark = string.find( content, '"', it, true )
 
@@ -836,15 +835,13 @@ function directory.deserializeCommandList( content )
 				it = string.find( content, '%S', rightQuotationMark + 1, false )
 
 			else
-				local tail = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
+				local nextSpace = string.find( content, ' ',  it, true )
+				local tail      = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
 
 				table.insert( command.arguments, string.sub( content, it, tail ) )
 
 				it = string.find( content, '%S', tail + 1, false )
 			end
-
-			nextSpace = string.find( content, ' ',  it, true )
-
 		end
 
 		-- Store command
