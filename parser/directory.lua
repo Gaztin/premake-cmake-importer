@@ -4,6 +4,13 @@ m.parser           = m.parser or { }
 m.parser.directory = { }
 local directory    = m.parser.directory
 
+-- Expression operator type enumerator
+m.OP_TYPE          = { }
+m.OP_TYPE.CONSTANT = 0x0
+m.OP_TYPE.UNARY    = 0x1
+m.OP_TYPE.BINARY   = 0x2
+m.OP_TYPE.BOOL     = 0x4
+
 function directory.parse( filePath )
 	-- Allow @filePath to just be the directory name.
 	-- Append 'CMakeLists.txt' in that case.
@@ -338,10 +345,10 @@ function directory.deserializeProject( content, baseDir )
 				goto continue
 			end
 
-			local unary_tests = {
+			local unary_ops = {
 				'EXISTS', 'COMMAND', 'DEFINED',
 			}
-			local binary_tests = {
+			local binary_ops = {
 				'EQUAL',              'LESS',             'LESS_EQUAL',            'GREATER',
 				'GREATER_EQUAL',      'STREQUAL',         'STRLESS',               'STRLESS_EQUAL',
 				'STRGREATER',         'STRGREATER_EQUAL', 'VERSION_EQUAL',         'VERSION_LESS',
@@ -350,166 +357,201 @@ function directory.deserializeProject( content, baseDir )
 			local bool_ops = {
 				'NOT', 'AND', 'OR',
 			}
-			local all_ops   = table.join( unary_tests, binary_tests, bool_ops )
-			local constants = { }
+			local expressions = { }
 
-			-- Look for constants
-			for i=1,#cmd.arguments do
-				local is_unary_test  = table.contains( unary_tests, cmd.arguments[ i ] )
-				local is_binary_test = table.contains( binary_tests, cmd.arguments[ i ] )
-				local is_bool_op     = table.contains( bool_ops, cmd.arguments[ i ] )
-				local is_constant    = not ( is_unary_test or is_binary_test or is_bool_op )
+			-- Parse expressions
+			for i = 1, #cmd.arguments do
+				local expr   = { }
+				expr.value   = cmd.arguments[ i ]
+				expr.op_type = ( table.contains( unary_ops,  expr.value ) and m.OP_TYPE.UNARY  or 0 )
+				             | ( table.contains( binary_ops, expr.value ) and m.OP_TYPE.BINARY or 0 )
+				             | ( table.contains( bool_ops,   expr.value ) and m.OP_TYPE.BOOL   or 0 )
 
-				if( is_constant ) then
-					local const = { }
-
-					const.name = cmd.arguments[ i ]
-
+				if( expr.op_type == m.OP_TYPE.CONSTANT ) then
 					-- Determine what type the constant is
-					if( string.sub( cmd.arguments[ i ], 1, 1 ) == '"' ) then
-						const.eval = cmd.arguments[ i ]
+					if( string.sub( expr.value, 1, 1 ) == '"' ) then
+						expr.const = expr.value
 					elseif( tonumber( cmd.arguments[ i ] ) ~= nil ) then
-						const.eval = tonumber( cmd.arguments[ i ] )
+						expr.const = tonumber( expr.value )
 					else
-						const.eval = expandVariable( cmd.arguments[ i ] )
+						expr.const = expandVariable( expr.value )
 					end
-
-					const.index = i
-
-					table.insert( constants, const )
 				end
-			end
 
-			local new_test = true
+				table.insert( expressions, expr )
+			end
 
 			-- TODO: Inner parentheses
 
-			-- Unary tests
-			for _,const in ipairs( constants ) do
-				if( const.index > 1 ) then
-					local unary_test    = cmd.arguments[ const.index - 1 ]
-					local do_unary_test = table.contains( unary_tests, unary_test )
+			-- Unary tests. Analyzes @expressions[ 2 ] -> @expressions[ #expressions ]
+			local i = 1
+			while( ( i + 1 ) <= #expressions ) do
+				i = i + 1
 
-					if( do_unary_test ) then
-						if( unary_test == 'EXISTS' ) then
-							-- TODO: Implement EXISTS
-							const.eval = false
-						elseif( unary_test == 'COMMAND' ) then
-							-- TODO: Implement COMMAND
-							const.eval = false
-						elseif( unary_test == 'DEFINED' ) then
-							const.eval = ( ( const.eval ~= nil ) and ( const.eval ~= m.NOTFOUND ) )
-						end
+				local which_op      = expressions[ i - 1 ].value
+				local do_unary_test = table.contains( unary_ops, which_op )
+
+				if( do_unary_test ) then
+					local constexpr = expressions[ i ]
+					local newExpr   = {
+						op_type = m.OP_TYPE.CONSTANT,
+						value   = ( which_op .. ' ' .. constexpr.value ),
+						const   = nil
+					}
+
+					if( which_op == 'EXISTS' ) then
+
+						-- TODO: Implement EXISTS
+						newExpr.const = false
+
+					elseif( which_op == 'COMMAND' ) then
+
+						-- TODO: Implement COMMAND
+						newExpr.const = false
+
+					elseif( which_op == 'DEFINED' ) then
+
+						-- DEFINED yields true as long as the constant is not nil or NOTFOUND
+						newExpr.const = ( ( constexpr.const ~= nil ) and ( constexpr.const ~= m.NOTFOUND ) )
+
 					end
+
+					-- Replace operator and argument with a combined evaluation
+					i = i - 1
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.insert( expressions, i, newExpr )
 				end
 			end
 
-			-- Binary tests
-			local i            = 0
-			local newConstants = { }
+			-- Binary tests. Analyzes @expressions[ 2 ] -> @expressions[ #expressions - 1 ]
+			local i = 1
+			while( ( i + 1 ) < #expressions ) do
+				i = i + 1
 
-			while( i < #constants ) do
-				i         = i + 1
-				local lhs = constants[ i ]
+				local which_op       = expressions[ i ].value
+				local do_binary_test = table.contains( binary_ops, which_op )
 
-				if( lhs.index < #cmd.arguments ) then
-					local binary_test    = cmd.arguments[ lhs.index + 1 ]
-					local do_binary_test = table.contains( binary_tests, binary_test )
+				if( do_binary_test ) then
+					local lhs     = expressions[ i - 1 ]
+					local rhs     = expressions[ i + 1 ]
+					local newexpr = {
+						op_type = m.OP_TYPE.CONSTANT,
+						value   = string.format( '(%s %s %s)', lhs.value, which_op, rhs.value ),
+						const   = nil
+					}
 
-					if( do_binary_test and i < #constants ) then
-						local rhs    = constants[ i + 1 ]
-						local result = nil
-
-						if( binary_test == 'EQUAL'                 ) then result = ( lhs.eval == rhs.eval ) end
-						if( binary_test == 'LESS'                  ) then result = ( lhs.eval < rhs.eval  ) end
-						if( binary_test == 'LESS_EQUAL'            ) then result = ( lhs.eval <= rhs.eval ) end
-						if( binary_test == 'GREATER'               ) then result = ( lhs.eval > rhs.eval  ) end
-						if( binary_test == 'GREATER_EQUAL'         ) then result = ( lhs.eval >= rhs.eval ) end
---						if( binary_test == 'STREQUAL'              ) then result = ( lhs.eval == rhs.eval ) end
---						if( binary_test == 'STRLESS'               ) then result = ( lhs.eval < rhs.eval  ) end
---						if( binary_test == 'STRLESS_EQUAL'         ) then result = ( lhs.eval <= rhs.eval ) end
---						if( binary_test == 'STRGREATER'            ) then result = ( lhs.eval > rhs.eval  ) end
---						if( binary_test == 'STRGREATER_EQUAL'      ) then result = ( lhs.eval >= rhs.eval ) end
---						if( binary_test == 'VERSION_EQUAL'         ) then result = ( lhs.eval == rhs.eval ) end
---						if( binary_test == 'VERSION_LESS'          ) then result = ( lhs.eval < rhs.eval  ) end
---						if( binary_test == 'VERSION_LESS_EQUAL'    ) then result = ( lhs.eval <= rhs.eval ) end
---						if( binary_test == 'VERSION_GREATER'       ) then result = ( lhs.eval > rhs.eval  ) end
---						if( binary_test == 'VERSION_GREATER_EQUAL' ) then result = ( lhs.eval >= rhs.eval ) end
---						if( binary_test == 'MATCHES'               ) then result = ( lhs.eval == rhs.eval ) end
-
-						-- TODO: index should be index in argument list, which it is not apart of. this is a problem..
-						if( result ~= nil ) then
-							local const  = {
-								name=string.format( '(%s %s %s)', tostring( lhs.eval ), binary_test, tostring( rhs.eval ) ),
-								eval=result,
-								index=lhs.index
-							}
-
-							table.insert( newConstants, const )
-
-							-- Skip rhs for next iteration
-							i = i + 1
-						end
-					else
-						local const = { name=lhs.name, eval=lhs.eval, index=lhs.index }
-
-						table.insert( newConstants, const )
+					-- TODO: Properly implement these binary operators
+					    if( which_op == 'EQUAL'                 ) then newexpr.const = ( lhs.const == rhs.const )
+					elseif( which_op == 'LESS'                  ) then newexpr.const = ( lhs.const <  rhs.const )
+					elseif( which_op == 'LESS_EQUAL'            ) then newexpr.const = ( lhs.const <= rhs.const )
+					elseif( which_op == 'GREATER'               ) then newexpr.const = ( lhs.const >  rhs.const )
+					elseif( which_op == 'GREATER_EQUAL'         ) then newexpr.const = ( lhs.const >= rhs.const )
+					elseif( which_op == 'STREQUAL'              ) then newexpr.const = ( lhs.const == rhs.const )
+					elseif( which_op == 'STRLESS'               ) then newexpr.const = ( lhs.const <  rhs.const )
+					elseif( which_op == 'STRLESS_EQUAL'         ) then newexpr.const = ( lhs.const <= rhs.const )
+					elseif( which_op == 'STRGREATER'            ) then newexpr.const = ( lhs.const >  rhs.const )
+					elseif( which_op == 'STRGREATER_EQUAL'      ) then newexpr.const = ( lhs.const >= rhs.const )
+					elseif( which_op == 'VERSION_EQUAL'         ) then newexpr.const = ( lhs.const == rhs.const )
+					elseif( which_op == 'VERSION_LESS'          ) then newexpr.const = ( lhs.const <  rhs.const )
+					elseif( which_op == 'VERSION_LESS_EQUAL'    ) then newexpr.const = ( lhs.const <= rhs.const )
+					elseif( which_op == 'VERSION_GREATER'       ) then newexpr.const = ( lhs.const >  rhs.const )
+					elseif( which_op == 'VERSION_GREATER_EQUAL' ) then newexpr.const = ( lhs.const >= rhs.const )
+					elseif( which_op == 'MATCHES'               ) then newexpr.const = ( lhs.const == rhs.const )
 					end
-				else
-					local const = { name=lhs.name, eval=lhs.eval, index=lhs.index }
 
-					table.insert( newConstants, const )
-				end
-			end
-
-			constants = newConstants
-
-			-- Boolean NOT operation
-			for _,const in ipairs( constants ) do
-				if( const.index > 2 ) then
-					local unary_is_before = table.contains( unary_tests, cmd.arguments[ const.index - 1 ] )
-					local negate_unary    = cmd.arguments[ const.index - 2 ] == 'NOT'
-
-					if( unary_is_before and negate_unary ) then
-						-- Unary should already be evaluated into eval here
-						const.eval = not isConstantTrue( const.eval )
+					if( newexpr.const == nil ) then
+						p.error( 'Unable to solve test due to unhandled binary operator "%s"', which_op )
 					end
-				end
-				if( const.index > 1 ) then
-					local do_negate = cmd.arguments[ const.index - 1 ] == 'NOT'
 
-					if( do_negate ) then
-						const.eval = not isConstantTrue( const.eval )
-					end
-				end
-			end
-
-			-- Boolean AND operation
-			for i=1,#constants do
-				if( i < #constants ) then
-					local lhs = isConstantTrue( constants[ i ].eval )
-					local rhs = isConstantTrue( constants[ i + 1 ].eval )
-
-					new_test = new_test and ( lhs and rhs )
+					-- Replace both arguments and the operator with the combined evaluation
+					i = i - 1
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.insert( expressions, i, newexpr )
 				end
 			end
 
-			-- Boolean OR operation
-			for i=1,#constants do
-				if( i < #constants ) then
-					local lhs = isConstantTrue( constants[ i ].eval )
-					local rhs = isConstantTrue( constants[ i + 1 ].eval )
+			-- Boolean NOT operations. Analyzes @expressions[ 2 ] -> @expressions[ #expressions ]
+			local i = 1
+			while( ( i + 1 ) <= #expressions ) do
+				i = i + 1
 
-					new_test = new_test and ( lhs or rhs )
+				local notexpr = expressions[ i - 1 ]
+
+				if( notexpr.value == 'NOT' ) then
+					local constexpr = expressions[ i ]
+					local newexpr   = {
+						op_type = m.OP_TYPE.CONSTANT,
+						value   = string.format( '(NOT %s)', constexpr.value ),
+						const   = ( not isConstantTrue( constexpr.const ) )
+					}
+
+					-- Replace both the NOT and the constant expressions with a combined evaluation
+					i = i - 1
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.insert( expressions, i, newexpr )
 				end
 			end
 
-			-- Fix single constant without relationships
-			if( #constants == 1 ) then
-				new_test = isConstantTrue( constants[ 1 ].eval )
+			-- Boolean AND operations. Analyzes @expressions[ 2 ] -> @expressions[ #expressions - 1 ]
+			local i = 1
+			while( ( i + 1 ) < #expressions ) do
+				i = i + 1
+
+				local andexpr = expressions[ i ]
+
+				if( andexpr.value == 'AND' ) then
+					local lhs     = expressions[ i - 1 ]
+					local rhs     = expressions[ i + 1 ]
+					local newexpr = {
+						op_type = m.OP_TYPE.CONSTANT,
+						value   = string.format( '(%s AND %s)', lhs.value, rhs.value ),
+						const   = ( lhs.const and rhs.const )
+					}
+
+					-- Replace both arguments and the operator with a combined evaluation
+					i = i - 1
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.insert( expressions, i, newexpr )
+				end
 			end
 
-			table.insert( tests, new_test )
+			-- Boolean OR operations. Analyzes @expressions[ 2 ] -> @expressions[ #expressions - 1 ]
+			local i = 1
+			while( ( i + 1 ) < #expressions ) do
+				i = i + 1
+
+				local orexpr = expressions[ i ]
+
+				if( orexpr.value == 'OR' ) then
+					local lhs     = expressions[ i - 1 ]
+					local rhs     = expressions[ i + 1 ]
+					local newexpr = {
+						op_type = m.OP_TYPE.CONSTANT,
+						value   = string.format( '(%s OR %s)', lhs.value, rhs.value ),
+						const   = ( lhs.const or rhs.const )
+					}
+
+					-- Replace both arguments and the operator with a combined evaluation
+					i = i - 1
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.remove( expressions, i )
+					table.insert( expressions, i, newexpr )
+				end
+			end
+
+			local test = true
+			for _,expr in ipairs( expressions ) do
+				test = test and isConstantTrue( expr.const )
+			end
+
+			table.insert( tests, test )
 
 		elseif( cmd.name == 'else' ) then
 
