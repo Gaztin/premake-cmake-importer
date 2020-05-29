@@ -610,13 +610,15 @@ function directory.deserializeProject( content, baseDir )
 				             | ( table.contains( binary_ops, expr.value ) and m.OP_TYPE.BINARY or 0 )
 				             | ( table.contains( bool_ops,   expr.value ) and m.OP_TYPE.BOOL   or 0 )
 
+				-- Determine what type the constant is
 				if( expr.op_type == m.OP_TYPE.CONSTANT ) then
 
-					-- Determine what type the constant is
-					if( string.sub( expr.value, 1, 1 ) == '"' ) then
+					if( m.isStringLiteral( expr.value ) ) then
 						expr.const = resolveVariables( expr.value )
+
 					elseif( tonumber( cmd.arguments[ i ] ) ~= nil ) then
 						expr.const = tonumber( expr.value )
+
 					else
 						expr.const = expandVariable( expr.value )
 					end
@@ -825,14 +827,14 @@ function directory.deserializeProject( content, baseDir )
 		if( entry == 'CMAKE_CXX_FLAGS' ) then
 
 			-- Replace surrounding quotation marks
-			if( value:startswith( '"' ) ) then
+			if( m.isStringLiteral( value ) ) then
 				value = string.gsub( value, '"(.*)"', '%1' )
 			end
 
 			local options = value:explode( ' ' )
 
 			buildoptions( options )
-			
+
 		else
 			p.warn( 'Unhandled cache entry %s', entry )
 		end

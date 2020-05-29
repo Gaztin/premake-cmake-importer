@@ -1,6 +1,8 @@
 local p               = premake
 p.extensions.impcmake = { }
 
+require 'utility'
+
 require 'parser/directory'
 
 local m      = premake.extensions.impcmake
