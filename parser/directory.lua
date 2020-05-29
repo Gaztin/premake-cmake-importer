@@ -71,11 +71,21 @@ function directory.deserializeProject( content, baseDir )
 	end
 
 	local function resolveVariables( str )
-		for k,v in pairs( m.scope.variables ) do
-			local pattern = string.format( '${%s}', k )
+		repeat
+			st, en = string.find( str, '${%S+}' )
 
-			str = string.gsub( str, pattern, v )
-		end
+			if( st ~= nil ) then
+				local var   = string.sub( str, st + 2, en - 1 )
+				local value = m.scope.variables[ var ]
+
+				if( value ~= nil ) then
+					str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
+				else
+					str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
+				end
+			end
+		until( st == nil )
+
 		return str
 	end
 
@@ -184,7 +194,7 @@ function directory.deserializeProject( content, baseDir )
 					end
 
 				else
-					table.insert( values, arguments[ i ] )
+					table.insert( values, resolveVariables( arguments[ i ] ) )
 				end
 			end
 
