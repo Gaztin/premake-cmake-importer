@@ -809,7 +809,6 @@ function directory.deserializeCommandList( content )
 	local begin       = 1
 
 	-- TODO: @nextRightParenthesis will get caught on the first right-parenthesis which means parentheses in string literals will not yield wanted results.
-	-- TODO: @command.arguments does not take spaces within string literals into account.
 
 	while( begin < #content ) do
 		local nextLeftParenthesis  = string.find( content, '(', begin,               true )
@@ -827,12 +826,25 @@ function directory.deserializeCommandList( content )
 		local it        = nextLeftParenthesis + 1
 		local nextSpace = string.find( content, ' ', nextLeftParenthesis, true )
 		while( it and it < nextRightParenthesis ) do
-			local tail   = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
+			local leftQuotationMark = string.find( content, '"', it, true )
 
-			table.insert( command.arguments, string.sub( content, it, tail ) )
+			if( leftQuotationMark and leftQuotationMark == it ) then
+				local rightQuotationMark = string.find( content, '"', leftQuotationMark + 1, true )
 
-			it        = string.find( content, '%S', tail + 1, false )
-			nextSpace = string.find( content, ' ',  it,       true )
+				table.insert( command.arguments, string.sub( content, leftQuotationMark, rightQuotationMark ) )
+
+				it = string.find( content, '%S', rightQuotationMark + 1, false )
+
+			else
+				local tail = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
+
+				table.insert( command.arguments, string.sub( content, it, tail ) )
+
+				it = string.find( content, '%S', tail + 1, false )
+			end
+
+			nextSpace = string.find( content, ' ',  it, true )
+
 		end
 
 		-- Store command
