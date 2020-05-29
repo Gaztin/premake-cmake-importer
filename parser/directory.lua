@@ -11,6 +11,9 @@ m.OP_TYPE.UNARY    = 0x1
 m.OP_TYPE.BINARY   = 0x2
 m.OP_TYPE.BOOL     = 0x4
 
+-- Function or directory scope
+m.scope = nil
+
 function directory.parse( filePath )
 	-- Allow @filePath to just be the directory name.
 	-- Append 'CMakeLists.txt' in that case.
@@ -51,11 +54,22 @@ end
 function directory.deserializeProject( content, baseDir )
 	local commandList  = directory.deserializeCommandList( content )
 	local currentGroup = p.api.scope.group
-	local variables    = { }
 	local aliases      = { }
 
+	-- Create new scope inside the current scope, if there is one
+	if( m.scope ~= nil ) then
+		local newscope = { parent=m.scope }
+
+		m.scope.children = m.scope.children or { }
+		table.insert( m.scope.children, newscope )
+
+		m.scope = newscope
+	else
+		m.scope = { }
+	end
+
 	local function resolveVariables( str )
-		for k,v in pairs( variables ) do
+		for k,v in pairs( m.scope.variables ) do
 			local pattern = string.format( '${%s}', k )
 
 			str = string.gsub( str, pattern, v )
@@ -64,7 +78,7 @@ function directory.deserializeProject( content, baseDir )
 	end
 
 	local function expandVariable( name )
-		for k,v in pairs( variables ) do
+		for k,v in pairs( m.scope.variables ) do
 			if( k == name ) then
 				return v
 			end
@@ -109,7 +123,8 @@ function directory.deserializeProject( content, baseDir )
 	end
 
 	-- Add predefined variables
-	variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
+	m.scope.variables = { }
+	m.scope.variables[ 'PROJECT_SOURCE_DIR' ] = baseDir
 
 	local tests = { }
 
@@ -133,8 +148,7 @@ function directory.deserializeProject( content, baseDir )
 			local arguments    = cmd.arguments
 			local variableName = table.remove( arguments, 1 )
 
-			-- Store new variable
-			variables[ variableName ] = table.implode( arguments, '', '', ' ' )
+					m.scope.variables[ variableName ] = table.implode( values, '', '', ' ' )
 
 		elseif( cmd.name == 'add_executable' ) then
 			local arguments = cmd.arguments
@@ -724,6 +738,13 @@ function directory.deserializeProject( content, baseDir )
 	if( currentGroup ) then
 		-- Restore current group
 		p.api.scope.group = currentGroup
+	end
+
+	-- Restore scope
+	if( m.scope.parent ~= nil ) then
+		m.scope = m.scope.parent
+	else
+		m.scope = nil
 	end
 end
 
