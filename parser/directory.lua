@@ -584,6 +584,9 @@ function directory.deserializeCommandList( content )
 	local commandList = { }
 	local begin       = 1
 
+	-- TODO: @nextRightParenthesis will get caught on the first right-parenthesis which means parentheses in string literals will not yield wanted results.
+	-- TODO: @command.arguments does not take spaces within string literals into account.
+
 	while( begin < #content ) do
 		local nextLeftParenthesis  = string.find( content, '(', begin,               true )
 		local nextRightParenthesis = string.find( content, ')', nextLeftParenthesis, true )
