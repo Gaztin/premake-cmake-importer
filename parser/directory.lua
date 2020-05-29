@@ -823,8 +823,8 @@ function directory.deserializeCommandList( content )
 		command.name = string.match( command.name, '^%s*(.*%S)%s*' ) or command.name
 		argString    = string.match( argString,    '^%s*(.*%S)%s*' ) or argString
 
-		local it = nextLeftParenthesis + 1
-		
+		local it = string.find( content, '%S', nextLeftParenthesis + 1, false )
+
 		while( it and it < nextRightParenthesis ) do
 			local leftQuotationMark = string.find( content, '"', it, true )
 
