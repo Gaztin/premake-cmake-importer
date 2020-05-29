@@ -575,9 +575,10 @@ function directory.deserializeProject( content, baseDir )
 				             | ( table.contains( bool_ops,   expr.value ) and m.OP_TYPE.BOOL   or 0 )
 
 				if( expr.op_type == m.OP_TYPE.CONSTANT ) then
+
 					-- Determine what type the constant is
 					if( string.sub( expr.value, 1, 1 ) == '"' ) then
-						expr.const = expr.value
+						expr.const = resolveVariables( expr.value )
 					elseif( tonumber( cmd.arguments[ i ] ) ~= nil ) then
 						expr.const = tonumber( expr.value )
 					else
