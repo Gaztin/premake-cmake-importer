@@ -814,16 +814,27 @@ function directory.deserializeCommandList( content )
 	while( begin < #content ) do
 		local nextLeftParenthesis  = string.find( content, '(', begin,               true )
 		local nextRightParenthesis = string.find( content, ')', nextLeftParenthesis, true )
-		local command              = { }
-		command.name               = string.sub( content, begin, nextLeftParenthesis - 1 )
-		command.arguments          = string.sub( content, nextLeftParenthesis + 1, nextRightParenthesis - 1 )
+		local argString            = string.sub( content, nextLeftParenthesis + 1, nextRightParenthesis - 1 )
+		local command              = {
+			name      = string.sub( content, begin, nextLeftParenthesis - 1 ),
+			arguments = { }
+		}
 
 		-- Trim surrounding whitespace
-		command.name               = string.match( command.name,      '^%s*(.*%S)%s*' ) or command.name
-		command.arguments          = string.match( command.arguments, '^%s*(.*%S)%s*' ) or command.arguments
+		command.name = string.match( command.name, '^%s*(.*%S)%s*' ) or command.name
+		argString    = string.match( argString,    '^%s*(.*%S)%s*' ) or argString
 
-		-- Explode arguments into array
-		command.arguments          = string.explode( command.arguments, ' ' )
+		local it        = nextLeftParenthesis + 1
+		local nextSpace = string.find( content, ' ', nextLeftParenthesis, true )
+		while( it < nextRightParenthesis ) do
+			local tail   = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
+			local nextIt = tail + 2
+
+			table.insert( command.arguments, string.sub( content, it, tail ) )
+
+			it        = nextIt
+			nextSpace = string.find( content, ' ', nextIt, true )
+		end
 
 		-- Store command
 		table.insert( commandList, command )
