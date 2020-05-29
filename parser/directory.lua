@@ -344,6 +344,7 @@ function directory.deserializeProject( content, baseDir )
 			local propertyHandler        = nil
 			local meta                   = nil
 			local options                = { 'APPEND', 'APPEND_STRING' }
+			local possible_entries_table = { }
 			index                        = index + 1
 
 			if( scope == 'GLOBAL' ) then
@@ -420,7 +421,13 @@ function directory.deserializeProject( content, baseDir )
 				local entries = { }
 
 				propertyHandler = function( entries, property, values )
+					if( property == 'STRINGS' ) then
+						for _,entry in ipairs( entries ) do
+							possible_entries_table[ entry ] = values
+						end
+					else
 						p.warn( 'Unhandled property %s in CACHE scope', property )
+					end
 				end
 
 				while( ( not table.contains( options, cmd.arguments[ index ] ) ) and ( cmd.arguments[ index ] ~= 'PROPERTY' ) ) do
@@ -459,6 +466,24 @@ function directory.deserializeProject( content, baseDir )
 			end
 
 			propertyHandler( meta, property, values )
+
+			for entry,possible_values in pairs( possible_entries_table ) do
+				if( entry == 'CMAKE_BUILD_TYPE' ) then
+
+					-- Remove surrounding quotation marks
+					for i = 1, #possible_values do
+						possible_values[ i ] = string.gsub( possible_values[ i ], '"(.*)"', '%1' )
+					end
+
+					-- Replace possible configurations
+					removeconfigurations { '*' }
+					configurations( possible_values )
+
+				else
+					p.warn( 'Unhandled possible values for entry %s: [%s]', entry, table.implode( possible_values, '', '', ', ' ) )
+				end
+			end
+
 		elseif( ( cmd.name == 'if' ) or ( cmd.name == 'elseif' ) ) then
 
 			-- Don't evaluate elseif if any previous tests were successful
