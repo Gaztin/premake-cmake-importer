@@ -826,14 +826,13 @@ function directory.deserializeCommandList( content )
 
 		local it        = nextLeftParenthesis + 1
 		local nextSpace = string.find( content, ' ', nextLeftParenthesis, true )
-		while( it < nextRightParenthesis ) do
+		while( it and it < nextRightParenthesis ) do
 			local tail   = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
-			local nextIt = tail + 2
 
 			table.insert( command.arguments, string.sub( content, it, tail ) )
 
-			it        = nextIt
-			nextSpace = string.find( content, ' ', nextIt, true )
+			it        = string.find( content, '%S', tail + 1, false )
+			nextSpace = string.find( content, ' ',  it,       true )
 		end
 
 		-- Store command
