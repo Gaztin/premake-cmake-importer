@@ -820,6 +820,24 @@ function directory.deserializeProject( content, baseDir )
 
 	-- TODO: Validate allowed cache entries against allowed cache entries
 
+	-- Handle cache entries
+	for entry,value in pairs( cache_entries ) do
+		if( entry == 'CMAKE_CXX_FLAGS' ) then
+
+			-- Replace surrounding quotation marks
+			if( value:startswith( '"' ) ) then
+				value = string.gsub( value, '"(.*)"', '%1' )
+			end
+
+			local options = value:explode( ' ' )
+
+			buildoptions( options )
+			
+		else
+			p.warn( 'Unhandled cache entry %s', entry )
+		end
+	end
+
 	-- Handle allowed cache entries
 	for entry,allowed in pairs( cache_entries_allowed ) do
 		if( entry == 'CMAKE_BUILD_TYPE' ) then
