@@ -447,9 +447,37 @@ function directory.deserializeProject( content, baseDir )
 			p.warnOnce( p.api.scope.project, string.format( 'Skipping installation rules for project "%s"', p.api.scope.project.name ) )
 
 		elseif( cmd.name == 'message' ) then
+			local arguments    = cmd.arguments
+			local allowedModes = { 'FATAL_ERROR', 'SEND_ERROR', 'WARNING',     'AUTHOR_WARNING',
+			                       'DEPRECATION', 'NOTICE',     'STATUS',      'VERBOSE',
+			                       'DEBUG',       'TRACE',      'CHECK_START', 'CHECK_PASS',
+			                       'CHECK_FAIL' }
 
-			-- Print message
-			printf( '[CMake]: %s', table.implode( cmd.arguments, '', '', ' ' ) )
+			if( #arguments > 1 ) then
+				local mode      = arguments[ 1 ]
+				local msg       = m.toRawString( arguments[ 2 ] )
+				local textColor = term.getTextColor()
+
+				if( mode == 'FATAL_ERROR' or mode == 'SEND_ERROR' ) then
+					term.setTextColor( term.red )
+				elseif( mode == 'WARNING' or mode == 'AUTHOR_WARNING' ) then
+					term.setTextColor( term.yellow )
+				elseif( mode == 'DEPRECATION' ) then
+					term.setTextColor( term.cyan )
+				elseif( mode == 'NOTICE' or mode == 'STATUS' or mode == 'VERBOSE' or mode == 'DEBUG' or mode == 'TRACE' or mode == 'CHECK_START' or mode == 'CHECK_PASS' or mode == 'CHECK_FAIL' ) then
+					term.setTextColor( term.white )
+				else
+					p.warn( 'Unhandled message mode "%s"', mode )
+				end
+
+				printf( '[CMake]<%s>: %s', mode, msg )
+				term.setTextColor( textColor )
+
+			else
+				local msg = m.toRawString( arguments[ 1 ] )
+
+				printf( '[CMake]: %s', msg )
+			end
 
 		elseif( cmd.name == 'set_property' ) then
 
