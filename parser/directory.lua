@@ -150,7 +150,9 @@ function directory.deserializeProject( content, baseDir )
 		end
 
 		if( cmd.name == 'cmake_minimum_required' ) then
-			-- Do nothing
+
+			-- TODO: Throw if higher than @m._LASTEST_CMAKE_VERSION
+			m.downloadCMakePortable( m._LASTEST_CMAKE_VERSION )
 
 		elseif( cmd.name == 'project' ) then
 			local groupName = cmd.arguments[ 1 ]
@@ -480,7 +482,6 @@ function directory.deserializeProject( content, baseDir )
 			end
 
 		elseif( cmd.name == 'set_property' ) then
-
 			local index           = 1
 			local scope           = cmd.arguments[ index ]
 			local propertyHandler = nil
