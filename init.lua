@@ -2,7 +2,7 @@ local p               = premake
 p.extensions.impcmake = { }
 
 require 'utility'
-require 'portable_cmake_cache'
+require 'cmake_modules_cache'
 
 require 'parser/directory'
 

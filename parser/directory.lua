@@ -152,7 +152,7 @@ function directory.deserializeProject( content, baseDir )
 		if( cmd.name == 'cmake_minimum_required' ) then
 
 			-- TODO: Throw if higher than @m._LASTEST_CMAKE_VERSION
-			m.downloadCMakePortable( m._LASTEST_CMAKE_VERSION )
+			m.downloadCMakeModules( m._LASTEST_CMAKE_VERSION )
 
 		elseif( cmd.name == 'project' ) then
 			local groupName = cmd.arguments[ 1 ]
