@@ -1,7 +1,8 @@
 local p = premake
 local m = p.extensions.impcmake
 
-m.CMAKE_MODULES_CACHE = '.cmake-modules-cache'
+m.CMAKE_MODULES_CACHE           = '.cmake-modules-cache'
+m.CMAKE_MODULES_CACHE_AVAILABLE = path.join( m.CMAKE_MODULES_CACHE, '.ready' )
 
 function m.downloadCMakeModules( version )
 	local url = string.format( 'https://gitlab.kitware.com/cmake/cmake/-/archive/v%s/cmake-v%s.zip?path=Modules', version, version )
@@ -16,11 +17,10 @@ function m.downloadCMakeModules( version )
 		io.write( result )
 	end
 
-	local src_zip        = 'cmake-modules.zip'
-	local dst_dir        = m.CMAKE_MODULES_CACHE
-	local done_file_path = path.join( dst_dir, '.done' )
+	local src_zip = 'cmake-modules.zip'
+	local dst_dir = m.CMAKE_MODULES_CACHE
 
-	if( not os.isfile( done_file_path ) ) then
+	if( not os.isfile( m.CMAKE_MODULES_CACHE_AVAILABLE ) ) then
 		local result, response = http.download( url, src_zip, { progress = progress } )
 
 		if( response == 200 ) then
@@ -43,7 +43,7 @@ function m.downloadCMakeModules( version )
 
 				io.write( 'CMake Modules (Done)        \n' )
 
-				local done_file = io.open( done_file_path, 'w+b' )
+				local done_file = io.open( m.CMAKE_MODULES_CACHE_AVAILABLE, 'w+b' )
 				done_file:close()
 			else
 				term.pushColor( term.red )
