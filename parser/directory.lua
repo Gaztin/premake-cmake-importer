@@ -456,24 +456,24 @@ function directory.deserializeProject( content, baseDir )
 			                       'CHECK_FAIL' }
 
 			if( #arguments > 1 ) then
-				local mode      = arguments[ 1 ]
-				local msg       = m.toRawString( arguments[ 2 ] )
-				local textColor = term.getTextColor()
+				local mode = arguments[ 1 ]
+				local msg  = m.toRawString( arguments[ 2 ] )
 
 				if( mode == 'FATAL_ERROR' or mode == 'SEND_ERROR' ) then
-					term.setTextColor( term.red )
+					term.pushColor( term.red )
 				elseif( mode == 'WARNING' or mode == 'AUTHOR_WARNING' ) then
-					term.setTextColor( term.yellow )
+					term.pushColor( term.yellow )
 				elseif( mode == 'DEPRECATION' ) then
-					term.setTextColor( term.cyan )
+					term.pushColor( term.cyan )
 				elseif( mode == 'NOTICE' or mode == 'STATUS' or mode == 'VERBOSE' or mode == 'DEBUG' or mode == 'TRACE' or mode == 'CHECK_START' or mode == 'CHECK_PASS' or mode == 'CHECK_FAIL' ) then
-					term.setTextColor( term.white )
+					term.pushColor( term.white )
 				else
 					p.warn( 'Unhandled message mode "%s"', mode )
+					term.pushColor( term.white )
 				end
 
 				printf( '[CMake]<%s>: %s', mode, msg )
-				term.setTextColor( textColor )
+				term.popColor()
 
 			else
 				local msg = m.toRawString( arguments[ 1 ] )
