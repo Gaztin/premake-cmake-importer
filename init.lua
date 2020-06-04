@@ -1,6 +1,7 @@
 local p               = premake
 p.extensions.impcmake = { }
 
+require 'api'
 require 'utility'
 require 'cmake_modules_cache'
 

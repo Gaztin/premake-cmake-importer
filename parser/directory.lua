@@ -11,9 +11,6 @@ m.OP_TYPE.UNARY    = 0x1
 m.OP_TYPE.BINARY   = 0x2
 m.OP_TYPE.BOOL     = 0x4
 
--- Function or directory scope
-m.scope = nil
-
 function directory.parse( filePath )
 	-- Allow @filePath to just be the directory name.
 	-- Append 'CMakeLists.txt' in that case.
@@ -58,47 +55,6 @@ function directory.deserializeProject( content, baseDir )
 	local cache_entries         = { }
 	local cache_entries_allowed = { }
 
-	-- Create new scope inside the current scope, if there is one
-	if( m.scope ~= nil ) then
-		local newscope = { parent=m.scope }
-
-		m.scope.children = m.scope.children or { }
-		table.insert( m.scope.children, newscope )
-
-		m.scope = newscope
-	else
-		m.scope = { }
-	end
-
-	local function resolveVariables( str )
-		repeat
-			st, en = string.find( str, '${%S+}' )
-
-			if( st ~= nil ) then
-				local var   = string.sub( str, st + 2, en - 1 )
-				local value = m.scope.variables[ var ]
-
-				if( value ~= nil ) then
-					str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
-				else
-					str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
-				end
-			end
-		until( st == nil )
-
-		return str
-	end
-
-	local function expandVariable( name )
-		for k,v in pairs( m.scope.variables ) do
-			if( k == name ) then
-				return v
-			end
-		end
-
-		return m.NOTFOUND
-	end
-
 	local function isConstantTrue( value )
 		if( value == nil ) then
 			return false
@@ -135,9 +91,13 @@ function directory.deserializeProject( content, baseDir )
 	end
 
 	-- Add predefined variables
-	m.scope.variables = { }
-	m.scope.variables[ 'PROJECT_SOURCE_DIR'        ] = baseDir
-	m.scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
+
+	cmakevariables {
+		PROJECT_SOURCE_DIR        = baseDir,
+		CMAKE_CONFIGURATION_TYPES = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' ),
+	}
+
+	-- Execute commands in order
 
 	local tests = { }
 
@@ -196,24 +156,18 @@ function directory.deserializeProject( content, baseDir )
 					end
 
 				else
-					table.insert( values, resolveVariables( arguments[ i ] ) )
+					table.insert( values, m.resolveVariables( arguments[ i ] ) )
 				end
 			end
 
 			if( not isCache ) then
-
-				-- Store variable normally
 				if( parentScope ) then
-
-					-- Store in parent scope
-					if( m.scope.parent ~= nil ) then
-						m.scope.parent.variables[ variableName ] = table.implode( values, '', '', ' ' )
-					else
-						p.warn( 'PARENT_SCOPE was provided for command "%s", but no parent scope was present', cmd.name )
-					end
-				else
-					m.scope.variables[ variableName ] = table.implode( values, '', '', ' ' )
+					p.warn( 'Unsupported option PARENT_SCOPE was declared for command "%s"', cmd.name )
 				end
+
+				cmakevariables {
+					[ variableName ] = table.implode( values, '', '', ' ' ),
+				}
 			end
 
 		elseif( cmd.name == 'add_executable' ) then
@@ -241,7 +195,7 @@ function directory.deserializeProject( content, baseDir )
 					elseif( arguments[ i ] == 'MACOSX_BUNDLE' ) then
 						-- TODO: https://cmake.org/cmake/help/v3.0/prop_tgt/MACOSX_BUNDLE.html
 					else
-						local f = resolveVariables( arguments[ i ] )
+						local f = m.resolveVariables( arguments[ i ] )
 
 						for _,v in ipairs( string.explode( f, ' ' ) ) do
 							local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
@@ -279,7 +233,7 @@ function directory.deserializeProject( content, baseDir )
 				end
 
 				for i=3,#arguments do
-					local f = resolveVariables( arguments[ i ] )
+					local f = m.resolveVariables( arguments[ i ] )
 
 					for _,v in ipairs( string.explode( f, ' ' ) ) do
 						local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
@@ -328,7 +282,7 @@ function directory.deserializeProject( content, baseDir )
 					if( modifiers[ 'BEFORE'    ] == true ) then p.warn( 'Unhandled modifier "BEFORE" was specified for "target_include_directories"'    ) end
 					if( modifiers[ 'INTERFACE' ] == true ) then p.warn( 'Unhandled modifier "INTERFACE" was specified for "target_include_directories"' ) end
 
-					arg = resolveVariables( arg )
+					arg = m.resolveVariables( arg )
 
 					for _,v in ipairs( string.explode( arg, ' ' ) ) do
 						local rebasedIncludeDir = path.rebase( v, baseDir, os.getcwd() )
@@ -375,7 +329,7 @@ function directory.deserializeProject( content, baseDir )
 				if( table.contains( { 'PRIVATE', 'PUBLIC', 'INTERFACE', 'LINK_INTERFACE_LIBRARIES', 'LINK_PRIVATE', 'LINK_PUBLIC' }, arg ) ) then
 					modifiers[ arg ] = true
 				else
-					arg = resolveVariables( arg )
+					arg = m.resolveVariables( arg )
 
 					for _,v in ipairs( string.explode( arg, ' ' ) ) do
 						local targetName = resolveAlias( v )
@@ -645,7 +599,9 @@ function directory.deserializeProject( content, baseDir )
 					term.popColor()
 
 					-- TODO: Let module do this instead
-					m.scope.variables[ packageName .. '_FOUND' ] = m.YES
+					cmakevariables {
+						[ packageName .. '_FOUND' ] = m.YES,
+					}
 				end
 
 			else
@@ -686,13 +642,13 @@ function directory.deserializeProject( content, baseDir )
 				if( expr.op_type == m.OP_TYPE.CONSTANT ) then
 
 					if( m.isStringLiteral( expr.value ) ) then
-						expr.const = resolveVariables( expr.value )
+						expr.const = m.resolveVariables( expr.value )
 
 					elseif( tonumber( cmd.arguments[ i ] ) ~= nil ) then
 						expr.const = tonumber( expr.value )
 
 					else
-						expr.const = expandVariable( expr.value )
+						expr.const = m.expandVariable( expr.value )
 					end
 				end
 
@@ -933,13 +889,6 @@ function directory.deserializeProject( content, baseDir )
 	if( currentGroup ) then
 		-- Restore current group
 		p.api.scope.group = currentGroup
-	end
-
-	-- Restore scope
-	if( m.scope.parent ~= nil ) then
-		m.scope = m.scope.parent
-	else
-		m.scope = nil
 	end
 end
 
