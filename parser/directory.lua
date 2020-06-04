@@ -947,6 +947,7 @@ end
 function directory.addSystemVariables()
 	local sys     = os.outputof( 'uname -s' )
 	local host    = os.host()
+	local target  = os.target()
 	local sysinfo = os.getversion()
 
 	-- Host system
@@ -982,3 +983,39 @@ function directory.addSystemVariables()
 			CMAKE_HOST_UNIX    = m.TRUE,
 		}
 	end
+
+	-- Target system
+
+	if( host == target ) then
+		cmakevariables {
+			CMAKE_SYSTEM_PROCESSOR = '%{CMAKE_HOST_SYSTEM_PROCESSOR}',
+			CMAKE_SYSTEM_VERSION   = '%{CMAKE_HOST_SYSTEM_VERSION}',
+		}
+	end
+
+	if( target == 'windows' ) then
+		cmakevariables {
+			CMAKE_SYSTEM_NAME = 'Windows',
+			WIN32             = m.TRUE,
+		}
+	elseif( target == 'macosx' ) then
+		cmakevariables {
+			CMAKE_SYSTEM_NAME = 'Apple',
+			APPLE             = m.TRUE,
+			UNIX              = m.TRUE,
+		}
+	elseif( target == 'android' ) then
+		cmakevariables {
+			CMAKE_SYSTEM_NAME = 'Android',
+			ANDROID           = m.TRUE,
+		}
+	elseif( target == 'ios' ) then
+		cmakevariables {
+			CMAKE_SYSTEM_NAME = 'iOS',
+			IOS               = m.TRUE,
+		}
+	end
+
+	cmakevariables {
+		CMAKE_SYSTEM = '%{CMAKE_SYSTEM_NAME}.%{CMAKE_SYSTEM_VERSION}'
+	}
