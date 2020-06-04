@@ -92,6 +92,8 @@ function directory.deserializeProject( content, baseDir )
 
 	-- Add predefined variables
 
+	directory.addSystemVariables()
+
 	cmakevariables {
 		PROJECT_SOURCE_DIR        = baseDir,
 		CMAKE_CONFIGURATION_TYPES = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' ),
@@ -941,3 +943,42 @@ function directory.deserializeCommandList( content )
 
 	return commandList
 end
+
+function directory.addSystemVariables()
+	local sys     = os.outputof( 'uname -s' )
+	local host    = os.host()
+	local sysinfo = os.getversion()
+
+	-- Host system
+
+	cmakevariables {
+		CMAKE_HOST_SYSTEM_NAME      = sys or host,
+		CMAKE_HOST_SYSTEM_PROCESSOR = os.getenv( 'PROCESSOR_ARCHITECTURE' ) or os.outputof( 'uname -m' ) or os.outputof( 'arch' ),
+		CMAKE_HOST_SYSTEM_VERSION   = string.format( '%d.%d.%d', sysinfo.majorversion, sysinfo.minorversion, sysinfo.revision ),
+		CMAKE_HOST_SYSTEM           = '%{CMAKE_HOST_SYSTEM_NAME}.%{CMAKE_HOST_SYSTEM_VERSION}',
+	}
+
+	if( host == 'windows' ) then
+		cmakevariables {
+			CMAKE_HOST_WIN32 = m.TRUE,
+		}
+		if( sys and sys:startswith( 'CYGWIN' ) ) then
+			cmakevariables {
+				CMAKE_HOST_CYGWIN = m.TRUE,
+			}
+		elseif( sys and sys:startswith( 'MINGW' ) ) then
+			cmakevariables {
+				CMAKE_HOST_MINGW = m.TRUE,
+			}
+		end
+	elseif( host == 'macosx' ) then
+		cmakevariables {
+			CMAKE_HOST_APPLE = m.TRUE,
+			CMAKE_HOST_UNIX  = m.TRUE,
+		}
+	elseif( host == 'solaris' ) then
+		cmakevariables {
+			CMAKE_HOST_SOLARIS = m.TRUE,
+			CMAKE_HOST_UNIX    = m.TRUE,
+		}
+	end
