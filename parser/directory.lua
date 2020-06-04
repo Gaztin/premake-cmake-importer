@@ -949,6 +949,7 @@ function directory.addSystemVariables()
 	local host    = os.host()
 	local target  = os.target()
 	local sysinfo = os.getversion()
+	local action  = _ACTION
 
 	-- Host system
 
@@ -1019,3 +1020,21 @@ function directory.addSystemVariables()
 	cmakevariables {
 		CMAKE_SYSTEM = '%{CMAKE_SYSTEM_NAME}.%{CMAKE_SYSTEM_VERSION}'
 	}
+
+	-- Generators
+
+	-- TODO: MSVC*
+	-- TODO: MSYS
+	-- TODO: WINCE
+	-- TODO: WINDOWS_PHONE
+	-- TODO: WINDOWS_STORE
+
+	if( action == 'Xcode4' ) then
+		local xcodeVersion = os.outputof( '/usr/bin/xcodebuild -version' )
+
+		cmakevariables {
+			XCODE         = m.TRUE,
+			XCODE_VERSION = xcodeVersion,
+		}
+	end
+end
