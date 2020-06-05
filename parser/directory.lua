@@ -101,13 +101,15 @@ function directory.deserializeProject( content, baseDir )
 
 	-- Execute commands in order
 
-	local tests = { }
+	local testScope  = { }
+	testScope.parent = nil
+	testScope.tests  = { true }
 
 	for _,cmd in ipairs( commandList ) do
-		local last_test = iif( #tests > 0, tests[ #tests ], true )
+		local lastTest = iif( #testScope.tests > 0, testScope.tests[ #testScope.tests ], false )
 
 		-- Skip commands if last test failed
-		if( ( not last_test ) and ( cmd.name ~= 'elseif' ) and ( cmd.name ~= 'else' ) and ( cmd.name ~= 'endif' ) ) then
+		if( ( not lastTest ) and ( cmd.name ~= 'if' ) and ( cmd.name ~= 'elseif' ) and ( cmd.name ~= 'else' ) and ( cmd.name ~= 'endif' ) ) then
 			goto continue
 		end
 
@@ -611,11 +613,34 @@ function directory.deserializeProject( content, baseDir )
 			end
 
 		elseif( ( cmd.name == 'if' ) or ( cmd.name == 'elseif' ) ) then
+			if( cmd.name == 'if' ) then
+				local newScope  = { }
+				newScope.parent = testScope
+				newScope.tests  = { }
+				testScope       = newScope
 
-			-- Don't evaluate elseif if any previous tests were successful
-			if( cmd.name == 'elseif' and table.contains( tests, true ) ) then
-				table.insert( tests, false )
-				goto continue
+				if( #testScope.parent.tests == 0 ) then
+					goto continue
+				end
+
+				if( testScope.parent.tests[ #testScope.parent.tests ] ) then
+					table.insert( testScope.tests, true )
+				else
+					goto continue
+				end
+
+			elseif( cmd.name == 'elseif' ) then
+				if( #testScope.tests == 0 ) then
+					goto continue
+				end
+
+				local tests = testScope.tests
+				table.remove( tests, 1 )
+
+				if( table.contains( tests, true ) ) then
+					table.insert( testScope.tests, false )
+					goto continue
+				end
 			end
 
 			local unary_ops = {
@@ -827,16 +852,19 @@ function directory.deserializeProject( content, baseDir )
 				test = test and isConstantTrue( expr.const )
 			end
 
-			table.insert( tests, test )
+			table.insert( testScope.tests, test )
 
 		elseif( cmd.name == 'else' ) then
 
-			table.insert( tests, not table.contains( tests, true ) )
+			if( #testScope.tests > 0 ) then
+				local tests = testScope.tests
+				table.remove( tests, 1 )
+				table.insert( testScope.tests, not table.contains( tests, true ) )
+			end
 
 		elseif( cmd.name == 'endif' ) then
 
-			-- Reset tests
-			tests = { }
+			testScope = testScope.parent
 
 		else
 
