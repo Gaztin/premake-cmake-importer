@@ -979,6 +979,21 @@ function directory.addSystemVariables()
 	local sysinfo = os.getversion()
 	local action  = _ACTION
 
+	-- Constants
+
+	cmakevariables {
+		[ m.ON       ] = m.ON,
+		[ m.YES      ] = m.YES,
+		[ m.TRUE     ] = m.TRUE,
+		[ m.Y        ] = m.Y,
+		[ m.OFF      ] = m.OFF,
+		[ m.NO       ] = m.NO,
+		[ m.FALSE    ] = m.FALSE,
+		[ m.N        ] = m.N,
+		[ m.IGNORE   ] = m.IGNORE,
+		[ m.NOTFOUND ] = m.NOTFOUND,
+	}
+
 	-- Host system
 
 	cmakevariables {
