@@ -55,32 +55,6 @@ function directory.deserializeProject( content, baseDir )
 	local cache_entries         = { }
 	local cache_entries_allowed = { }
 
-	local function isConstantTrue( value )
-		if( value == nil ) then
-			return false
-		end
-
-		local t = type( value )
-
-		if( t == 'boolean' ) then
-			return value
-		elseif( t == 'number' ) then
-			return ( value ~= 0 )
-		elseif( t == 'string') then
-			if( ( value == m.ON ) or ( value == m.YES ) or ( value == m.TRUE ) or ( value == m.Y ) ) then
-				return true
-			elseif( ( value == m.OFF ) or ( value == m.NO ) or ( value == m.FALSE ) or ( value == m.N ) or ( value == m.IGNORE ) or ( value == m.NOTFOUND ) ) then
-				return false
-			end
-
-			return ( string.len( value ) > 0 )
-		end
-
-		p.error( '"%s" is not an eligible type for a CMake constant', t )
-
-		return false
-	end
-
 	local function resolveAlias( name )
 		for k,v in pairs( aliases ) do
 			if( k == name ) then
@@ -671,7 +645,7 @@ function directory.deserializeProject( content, baseDir )
 					if( m.isStringLiteral( expr.value ) ) then
 						expr.const = m.resolveVariables( expr.value )
 
-					elseif( tonumber( cmd.arguments[ i ] ) ~= nil ) then
+					elseif( tonumber( expr.value ) ~= nil ) then
 						expr.const = tonumber( expr.value )
 
 					else
@@ -786,7 +760,7 @@ function directory.deserializeProject( content, baseDir )
 					local newexpr   = {
 						op_type = m.OP_TYPE.CONSTANT,
 						value   = string.format( '(NOT %s)', constexpr.value ),
-						const   = ( not isConstantTrue( constexpr.const ) )
+						const   = ( not m.isTrue( constexpr.const ) )
 					}
 
 					-- Replace both the NOT and the constant expressions with a combined evaluation
@@ -849,7 +823,7 @@ function directory.deserializeProject( content, baseDir )
 
 			local test = true
 			for _,expr in ipairs( expressions ) do
-				test = test and isConstantTrue( expr.const )
+				test = test and m.isTrue( expr.const )
 			end
 
 			table.insert( testScope.tests, test )
