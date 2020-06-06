@@ -599,8 +599,8 @@ function m.deserializeProject( content, baseDir )
 					goto continue
 				end
 
-				local tests = table.arraycopy( testScope.tests )
-				table.remove( tests, 1 )
+				-- Look at all tests except the first one, which is always true
+				local tests = table.pack( select( 2, table.unpack( testScope.tests ) ) )
 
 				if( table.contains( tests, true ) ) then
 					table.insert( testScope.tests, false )
@@ -822,8 +822,9 @@ function m.deserializeProject( content, baseDir )
 		elseif( cmd.name == 'else' ) then
 
 			if( #testScope.tests > 0 ) then
-				local tests = table.arraycopy( testScope.tests )
-				table.remove( tests, 1 )
+				-- Look at all tests except the first one, which is always true
+				local tests = table.pack( select( 2, table.unpack( testScope.tests ) ) )
+				
 				table.insert( testScope.tests, not table.contains( tests, true ) )
 			end
 
