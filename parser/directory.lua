@@ -12,10 +12,9 @@ m.OP_TYPE.BINARY   = 0x2
 m.OP_TYPE.BOOL     = 0x4
 
 function directory.parse( filePath )
-	-- Allow @filePath to just be the directory name.
-	-- Append 'CMakeLists.txt' in that case.
-	if( path.getname( filePath ) ~= 'CMakeLists.txt' ) then
-		filePath = path.normalize( filePath .. '/CMakeLists.txt' )
+	-- Append 'CMakeLists.txt' if @filePath is just a directory
+	if( os.isdir( filePath ) ) then
+		filePath = path.join( filePath, 'CMakeLists.txt' )
 	end
 
 	local file = io.open( filePath, 'r' )
