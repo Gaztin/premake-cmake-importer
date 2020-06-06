@@ -599,7 +599,7 @@ function m.deserializeProject( content, baseDir )
 					goto continue
 				end
 
-				local tests = testScope.tests
+				local tests = table.arraycopy( testScope.tests )
 				table.remove( tests, 1 )
 
 				if( table.contains( tests, true ) ) then
@@ -822,7 +822,7 @@ function m.deserializeProject( content, baseDir )
 		elseif( cmd.name == 'else' ) then
 
 			if( #testScope.tests > 0 ) then
-				local tests = testScope.tests
+				local tests = table.arraycopy( testScope.tests )
 				table.remove( tests, 1 )
 				table.insert( testScope.tests, not table.contains( tests, true ) )
 			end
