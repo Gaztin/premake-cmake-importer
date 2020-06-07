@@ -13,7 +13,12 @@ require 'parser/directory'
 m._VERSION               = '1.0.0'
 m._LASTEST_CMAKE_VERSION = '3.17.3'
 
--- Constants
+-- Variables that stay the same throughout the entire configuration, but are expensive to fetch
+
+m.HOST_SYSTEM_NAME      = os.outputof( 'uname -s' ) or os.host()
+m.HOST_SYSTEM_PROCESSOR = os.getenv( 'PROCESSOR_ARCHITECTURE' ) or os.outputof( 'uname -m' ) or os.outputof( 'arch' )
+
+-- Global constants
 m.ON       = 'ON'
 m.YES      = 'YES'
 m.TRUE     = 'TRUE'

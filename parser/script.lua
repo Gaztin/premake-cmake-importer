@@ -725,7 +725,6 @@ function m.deserializeCommandList( content )
 end
 
 function m.addSystemVariables()
-	local sys     = os.outputof( 'uname -s' )
 	local host    = os.host()
 	local target  = os.target()
 	local sysinfo = os.getversion()
@@ -749,8 +748,8 @@ function m.addSystemVariables()
 	-- Host system
 
 	cmakevariables {
-		CMAKE_HOST_SYSTEM_NAME      = sys or host,
-		CMAKE_HOST_SYSTEM_PROCESSOR = os.getenv( 'PROCESSOR_ARCHITECTURE' ) or os.outputof( 'uname -m' ) or os.outputof( 'arch' ),
+		CMAKE_HOST_SYSTEM_NAME      = m.HOST_SYSTEM_NAME,
+		CMAKE_HOST_SYSTEM_PROCESSOR = m.HOST_SYSTEM_PROCESSOR,
 		CMAKE_HOST_SYSTEM_VERSION   = string.format( '%d.%d.%d', sysinfo.majorversion, sysinfo.minorversion, sysinfo.revision ),
 		CMAKE_HOST_SYSTEM           = '%{CMAKE_HOST_SYSTEM_NAME}.%{CMAKE_HOST_SYSTEM_VERSION}',
 	}
@@ -759,11 +758,11 @@ function m.addSystemVariables()
 		cmakevariables {
 			CMAKE_HOST_WIN32 = m.TRUE,
 		}
-		if( sys and sys:startswith( 'CYGWIN' ) ) then
+		if( m.HOST_SYSTEM_NAME:startswith( 'CYGWIN' ) ) then
 			cmakevariables {
 				CMAKE_HOST_CYGWIN = m.TRUE,
 			}
-		elseif( sys and sys:startswith( 'MINGW' ) ) then
+		elseif( m.HOST_SYSTEM_NAME:startswith( 'MINGW' ) ) then
 			cmakevariables {
 				CMAKE_HOST_MINGW = m.TRUE,
 			}
