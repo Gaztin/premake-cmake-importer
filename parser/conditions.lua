@@ -2,6 +2,15 @@ local p = premake
 local m = p.extensions.impcmake
 
 function m.expandConditions( str )
+	-- Recursively expand conditions within this condition. Resolves parentheses wthin parentheses.
+	local leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
+	while( leftParenthesis ~= nil ) do
+		local capturedConditions          = string.sub( str, leftParenthesis + 1, rightParenthesis - 1 )
+		local capturedExpansion           = m.expandConditions( capturedConditions )
+		str                               = string.sub( str, 1, leftParenthesis - 1 ) .. iif( capturedExpansion, m.TRUE, m.FALSE ) .. string.sub( str, rightParenthesis + 1 )
+		leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
+	end
+
 	local conditions  = str:explode( ' ' )
 	local expressions = { }
 	local unary_ops   = {
@@ -17,16 +26,6 @@ function m.expandConditions( str )
 		'NOT', 'AND', 'OR',
 	}
 
-	local leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
-	while( leftParenthesis ~= nil ) do
-		local capturedConditions = string.sub( str, leftParenthesis + 1, rightParenthesis - 1 )
-		local capturedExpansion  = m.expandConditions( capturedConditions )
-
-		str = string.sub( str, 1, leftParenthesis - 1 ) .. iif( capturedExpansion, m.TRUE, m.FALSE ) .. string.sub( str, rightParenthesis + 1 )
-
-		leftParenthesis = string.find( str, '(', 1, true )
-	end
-
 	-- Parse expressions
 	for i = 1, #conditions do
 		local expr   = { }
@@ -37,7 +36,7 @@ function m.expandConditions( str )
 
 		-- Determine what type the constant is
 		if( expr.op_type == m.OP_TYPE.CONSTANT ) then
-
+			
 			if( m.isStringLiteral( expr.value ) ) then
 				expr.const = m.resolveVariables( expr.value )
 
@@ -51,8 +50,6 @@ function m.expandConditions( str )
 
 		table.insert( expressions, expr )
 	end
-
-	-- TODO: Inner parentheses
 
 	-- Unary tests. Analyzes @expressions[ 2 ] -> @expressions[ #expressions ]
 	local i = 1
