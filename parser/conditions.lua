@@ -17,6 +17,16 @@ function m.expandConditions( str )
 		'NOT', 'AND', 'OR',
 	}
 
+	local leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
+	while( leftParenthesis ~= nil ) do
+		local capturedConditions = string.sub( str, leftParenthesis + 1, rightParenthesis - 1 )
+		local capturedExpansion  = m.expandConditions( capturedConditions )
+
+		str = string.sub( str, 1, leftParenthesis - 1 ) .. iif( capturedExpansion, m.TRUE, m.FALSE ) .. string.sub( str, rightParenthesis + 1 )
+
+		leftParenthesis = string.find( str, '(', 1, true )
+	end
+
 	-- Parse expressions
 	for i = 1, #conditions do
 		local expr   = { }

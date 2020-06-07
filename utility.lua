@@ -85,3 +85,33 @@ function m.toRawString( str )
 		return str
 	end
 end
+
+function m.findMatchingParentheses( str, index )
+	index = index or 1
+
+	-- TODO: Don't count any parentheses inside string literals
+
+	local left = string.find( str, '(', index, true )
+	if( left == nil ) then
+		return nil
+	end
+
+	local numOpenParentheses = 1
+
+	-- Find matching right parenthesis
+	for i = left + 1, #str do
+		local c = str:sub( i, i )
+
+		if( c == '(' ) then
+			numOpenParentheses = numOpenParentheses + 1
+		elseif( c == ')' ) then
+			numOpenParentheses = numOpenParentheses - 1
+
+			if( numOpenParentheses == 0 ) then
+				return left, i
+			end
+		end
+	end
+
+	return nil
+end

@@ -681,14 +681,11 @@ function m.deserializeCommandList( content )
 	local commandList = { }
 	local begin       = 1
 
-	-- TODO: @nextRightParenthesis will get caught on the first right-parenthesis which means parentheses in string literals will not yield wanted results.
-
 	while( begin < #content ) do
-		local nextLeftParenthesis  = string.find( content, '(', begin,               true )
-		local nextRightParenthesis = string.find( content, ')', nextLeftParenthesis, true )
-		local command              = {
-			name      = string.sub( content, begin, nextLeftParenthesis - 1 ),
-			argString = string.sub( content, nextLeftParenthesis + 1, nextRightParenthesis - 1 ),
+		local leftParenthesis, rightParenthesis = m.findMatchingParentheses( content, begin )
+		local command = {
+			name      = string.sub( content, begin, leftParenthesis - 1 ),
+			argString = string.sub( content, leftParenthesis + 1, rightParenthesis - 1 ),
 			arguments = { },
 		}
 
@@ -696,9 +693,9 @@ function m.deserializeCommandList( content )
 		command.name      = string.match( command.name,      '^%s*(.*%S)%s*' ) or command.name
 		command.argString = string.match( command.argString, '^%s*(.*%S)%s*' ) or command.argString
 
-		local it = string.find( content, '%S', nextLeftParenthesis + 1, false )
+		local it = string.find( content, '%S', leftParenthesis + 1, false )
 
-		while( it and it < nextRightParenthesis ) do
+		while( it and it < rightParenthesis ) do
 			local leftQuotationMark = string.find( content, '"', it, true )
 
 			if( leftQuotationMark and leftQuotationMark == it ) then
@@ -710,7 +707,7 @@ function m.deserializeCommandList( content )
 
 			else
 				local nextSpace = string.find( content, ' ',  it, true )
-				local tail      = iif( ( nextSpace ~= nil ) and ( nextSpace < nextRightParenthesis ), nextSpace - 1, nextRightParenthesis - 1 )
+				local tail      = iif( ( nextSpace ~= nil ) and ( nextSpace < rightParenthesis ), nextSpace - 1, rightParenthesis - 1 )
 
 				table.insert( command.arguments, string.sub( content, it, tail ) )
 
@@ -721,7 +718,7 @@ function m.deserializeCommandList( content )
 		-- Store command
 		table.insert( commandList, command )
 
-		begin = nextRightParenthesis + 1
+		begin = rightParenthesis + 1
 	end
 
 	return commandList
