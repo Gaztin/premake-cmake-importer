@@ -11,7 +11,24 @@ function m.expandConditions( str )
 		leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
 	end
 
-	local conditions  = str:explode( ' ' )
+	-- Parse symbols
+	local conditions          = { }
+	local insideStringLiteral = false
+	local expressionStart     = 1
+	for i = 1, #str do
+		local c = str:sub( i, i )
+
+		if( c == '"' ) then
+			insideStringLiteral = not insideStringLiteral
+		elseif( c == ' ' and not insideStringLiteral ) then
+			if( expressionStart < i ) then
+				table.insert( conditions, str:sub( expressionStart, i - 1 ) )
+			end
+			expressionStart = i + 1
+		end
+	end
+	table.insert( conditions, str:sub( expressionStart ) )
+
 	local expressions = { }
 	local unary_ops   = {
 		'EXISTS', 'COMMAND', 'DEFINED',
