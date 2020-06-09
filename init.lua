@@ -8,6 +8,7 @@ require 'cmake_modules_cache'
 
 require 'parser/conditions'
 require 'parser/script'
+require 'parser/command_list'
 require 'parser/directory'
 
 m._VERSION               = '1.0.0'
