@@ -2,10 +2,10 @@ local p         = premake
 local m         = p.extensions.impcmake
 local executors = { }
 
-function m.executeCommand( cmd, condscope )
+function m.executeCommand( cmd, condscope__refwrap )
 	local executor = executors[ cmd.name ]
 	if( executor ~= nil ) then
-		executor( cmd, condscope )
+		executor( cmd, condscope__refwrap )
 		return true
 	else
 		return false
@@ -518,4 +518,51 @@ executors[ 'find_package' ] = function( cmd )
 	else
 		p.error( 'CMake module cache is not available for command "%s"', cmd.name )
 	end
+end
+
+executors[ 'if' ] = function( cmd, condscope__refwrap )
+	if( cmd.name == 'if' ) then
+		local newscope         = { }
+		newscope.parent        = condscope__refwrap.ptr
+		newscope.tests         = { }
+		condscope__refwrap.ptr = newscope
+
+		if( ( #condscope__refwrap.ptr.parent.tests > 0 ) and ( condscope__refwrap.ptr.parent.tests[ #condscope__refwrap.ptr.parent.tests ] ) ) then
+			table.insert( condscope__refwrap.ptr.tests, true )
+		else
+			return
+		end
+
+	elseif( cmd.name == 'elseif' ) then
+		if( #condscope__refwrap.ptr.tests == 0 ) then
+			return
+		end
+
+		-- Look at all tests except the first one, which is always true
+		local tests = table.pack( select( 2, table.unpack( condscope__refwrap.ptr.tests ) ) )
+
+		if( table.contains( tests, true ) ) then
+			table.insert( condscope__refwrap.ptr.tests, false )
+			return
+		end
+	end
+
+	local test = m.expandConditions( cmd.argString )
+
+	table.insert( condscope__refwrap.ptr.tests, test )
+end
+
+executors[ 'elseif' ] = executors[ 'if' ]
+
+executors[ 'else' ] = function( cmd, condscope__refwrap )
+	if( #condscope__refwrap.ptr.tests > 0 ) then
+		-- Look at all tests except the first one, which is always true
+		local tests = table.pack( select( 2, table.unpack( condscope__refwrap.ptr.tests ) ) )
+
+		table.insert( condscope__refwrap.ptr.tests, not table.contains( tests, true ) )
+	end
+end
+
+executors[ 'endif' ] = function( cmd, condscope__refwrap )
+	condscope__refwrap.ptr = condscope__refwrap.ptr.parent
 end

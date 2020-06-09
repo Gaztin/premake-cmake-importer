@@ -56,7 +56,6 @@ function m.deserializeProject( content, baseDir )
 	end
 
 	-- Add predefined variables
-
 	m.addSystemVariables()
 
 	cmakevariables {
@@ -66,76 +65,26 @@ function m.deserializeProject( content, baseDir )
 
 	-- Execute commands in order
 
-	local testScope  = { }
-	testScope.parent = nil
-	testScope.tests  = { true }
+	local condscope  = { }
+	condscope.parent = nil
+	condscope.tests  = { true }
 
 	for _,cmd in ipairs( commandList ) do
-		local lastTest = iif( #testScope.tests > 0, testScope.tests[ #testScope.tests ], false )
+		local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
 
 		-- Skip commands if last test failed
-		if( ( not lastTest ) and ( cmd.name ~= 'if' ) and ( cmd.name ~= 'elseif' ) and ( cmd.name ~= 'else' ) and ( cmd.name ~= 'endif' ) ) then
-			goto continue
-		end
+		if( lastTest or cmd.name == 'if' or cmd.name == 'elseif' or cmd.name == 'else' or cmd.name == 'endif' ) then
+			-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
+			local condscope__refwrap = { ptr = condscope }
 
-		if( m.executeCommand( cmd, testScope ) ) then
-			goto continue
-		end
-
-		if( ( cmd.name == 'if' ) or ( cmd.name == 'elseif' ) ) then
-			if( cmd.name == 'if' ) then
-				local newScope  = { }
-				newScope.parent = testScope
-				newScope.tests  = { }
-				testScope       = newScope
-
-				if( ( #testScope.parent.tests > 0 ) and ( testScope.parent.tests[ #testScope.parent.tests ] ) ) then
-					table.insert( testScope.tests, true )
-				else
-					goto continue
-				end
-
-			elseif( cmd.name == 'elseif' ) then
-				if( #testScope.tests == 0 ) then
-					goto continue
-				end
-
-				-- Look at all tests except the first one, which is always true
-				local tests = table.pack( select( 2, table.unpack( testScope.tests ) ) )
-
-				if( table.contains( tests, true ) ) then
-					table.insert( testScope.tests, false )
-					goto continue
-				end
+			if( not m.executeCommand( cmd, condscope__refwrap ) ) then
+				-- Warn about unhandled command
+				p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
 			end
 
-			local test = m.expandConditions( cmd.argString )
-
-			table.insert( testScope.tests, test )
-
-		elseif( cmd.name == 'else' ) then
-
-			if( #testScope.tests > 0 ) then
-				-- Look at all tests except the first one, which is always true
-				local tests = table.pack( select( 2, table.unpack( testScope.tests ) ) )
-
-				table.insert( testScope.tests, not table.contains( tests, true ) )
-			end
-
-		elseif( cmd.name == 'endif' ) then
-
-			testScope = testScope.parent
-
-		else
-
-			-- Warn about unhandled command
-			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
-
+			-- Patch possibly new pointer
+			condscope = condscope__refwrap.ptr
 		end
-
-		-- Continue label
-		::continue::
-
 	end
 
 	-- TODO: Validate allowed cache entries against allowed cache entries
