@@ -22,10 +22,8 @@ function m.parseScript( filePath )
 		-- Trim leading whitespace
 		line = string.match( line, '^%s*(.*%S)' ) or ''
 
-		local firstChar = string.sub( line, 1, 1 )
-
-		-- Skip empty lines and comments
-		if( #line > 0 and firstChar ~= '#' ) then
+		-- Skip empty lines and comments (but not bracket comments. those are covered later)
+		if( #line > 0 and ( line:sub( 1, 1 ) ~= '#' or line:sub( 1, 2 ) == '#[' or line:find( '%]=*%]' ) ) ) then
 			content = content .. line .. ' '
 		end
 
@@ -33,6 +31,23 @@ function m.parseScript( filePath )
 	end
 
 	io.close( file )
+
+	-- Remove bracket comments
+	repeat
+		local st, en, cap = content:find( '#%[(=*)%[' )
+		if( st ~= nil ) then
+			-- Find matching end brackets with the same amount of '=' characters between the brackets (']]')
+			local closingBrackets = ']' .. cap .. ']'
+			local st2             = content:find( closingBrackets, en + 1, true )
+
+			if( st2 == nil ) then
+				p.error( 'Bracket comment with %d #s was opened but not closed in "%s"', #cap, filePath )
+				return
+			end
+
+			content = content:sub( 1, st - 1 ) .. content:sub( st2 + #closingBrackets )
+		end
+	until st == nil
 
 	local baseDir               = path.getdirectory( filePath )
 	local commandList           = m.deserializeCommandList( content )
