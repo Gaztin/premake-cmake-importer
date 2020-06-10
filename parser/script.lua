@@ -34,12 +34,7 @@ function m.parseScript( filePath )
 
 	io.close( file )
 
-	local baseDir = path.getdirectory( filePath )
-
-	m.deserializeProject( content, baseDir )
-end
-
-function m.deserializeProject( content, baseDir )
+	local baseDir               = path.getdirectory( filePath )
 	local commandList           = m.deserializeCommandList( content )
 	local currentGroup          = p.api.scope.group
 	local aliases               = { }

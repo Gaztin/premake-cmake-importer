@@ -509,6 +509,8 @@ executors[ 'find_package' ] = function( cmd )
 			printf( 'Found module "%s" at "%s"', packageName, filePath )
 			term.popColor()
 
+			m.parseScript( filePath )
+
 			-- TODO: Let module do this instead
 			cmakevariables {
 				[ packageName .. '_FOUND' ] = m.YES,
