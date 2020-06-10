@@ -505,16 +505,8 @@ executors[ 'find_package' ] = function( cmd )
 		local filePath = path.join( m.CMAKE_MODULES_CACHE, fileName )
 
 		if( os.isfile( filePath ) ) then
-			term.pushColor( term.green )
-			printf( 'Found module "%s" at "%s"', packageName, filePath )
-			term.popColor()
-
+			-- Load module script
 			m.parseScript( filePath )
-
-			-- TODO: Let module do this instead
-			cmakevariables {
-				[ packageName .. '_FOUND' ] = m.YES,
-			}
 		end
 
 	else
