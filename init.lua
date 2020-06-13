@@ -6,6 +6,7 @@ require 'api'
 require 'utility'
 require 'cmake_modules_cache'
 
+require 'parser/find_path'
 require 'parser/conditions'
 require 'parser/script'
 require 'parser/command_list'
