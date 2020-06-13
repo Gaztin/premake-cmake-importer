@@ -619,7 +619,196 @@ executors[ 'find_path' ] = function( cmd )
 		end
 	end
 
-	-- TODO: Apply options
+	-- Apply options
+
+	if( searchPackageRoot ) then
+		local packageRoot = p.api.scope.workspace.cmakecache[ m.currentPackage .. '_ROOT' ]
+
+		if( packageRoot ) then
+			for _,name in ipairs( names ) do
+				local filePath = path.join( packageRoot, name )
+
+				if( os.isfile( filePath ) ) then
+					cmakecache {
+						[ var ] = packageRoot,
+					}
+					return
+				end
+			end
+		end
+	end
+
+	if( searchCMakePath ) then
+		local libraryArchitecture = m.expandVariable( 'CMAKE_LIBRARY_ARCHITECTURE' )
+		local prefixPath          = m.expandVariable( 'CMAKE_PREFIX_PATH' )
+		local prefixes            = string.explode( prefixPath, ';' )
+
+		for _,prefix in ipairs( prefixes ) do
+			local dir = path.join( prefix, 'include' )
+
+			for _,name in ipairs( names ) do
+				if( libraryArchitecture ~= m.NOTFOUND ) then
+					local archDir  = path.join( dir, libraryArchitecture )
+					local filePath = path.join( archDir, name )
+
+					if( os.isfile( filePath ) ) then
+						cmakecache {
+							[ var ] = archDir,
+						}
+						return
+					end
+				end
+
+				local filePath = path.join( dir, name )
+
+				if( os.isfile( filePath ) ) then
+					cmakecache {
+						[ var ] = dir,
+					}
+					return
+				end
+			end
+		end
+
+		local includePath = m.expandVariable( 'CMAKE_INCLUDE_PATH' )
+
+		if( includePath ~= m.NOTFOUND ) then
+			local paths = string.explode( includePath, ';' )
+
+			for _,pathh in ipairs( paths ) do
+				for _,name in ipairs( names ) do
+					local filePath = path.join( pathh, name )
+
+					if( os.isfile( filePath ) ) then
+						cmakecache {
+							[ var ] = pathh,
+						}
+						return
+					end
+				end
+			end
+		end
+
+		local frameworkPath = m.expandVariable( 'CMAKE_FRAMEWORK_PATH' )
+
+		if( frameworkPath ~= m.NOTFOUND ) then
+			local paths = string.explode( frameworkPath, ';' )
+
+			for _,pathh in ipairs( paths ) do
+				for _,name in ipairs( names ) do
+					local filePath = path.join( pathh, name )
+
+					if( os.isfile( filePath ) ) then
+						cmakecache {
+							[ var ] = pathh,
+						}
+						return
+					end
+				end
+			end
+		end
+	end
+
+	if( searchCMakeEnvPath ) then
+		local separator           = iif( os.is( 'windows' ), ';', ':' )
+		local libraryArchitecture = os.getenv( 'CMAKE_LIBRARY_ARCHITECTURE' )
+		local prefixPath          = os.getenv( 'CMAKE_PREFIX_PATH' )
+		local prefixes            = iif( prefixPath, string.explode( prefixPath, separator ), { } )
+
+		for _,prefix in ipairs( prefixes ) do
+			local dir = path.join( prefix, 'include' )
+
+			for _,name in ipairs( names ) do
+				if( libraryArchitecture ) then
+					local archDir  = path.join( dir, libraryArchitecture )
+					local filePath = path.join( archDir, name )
+
+					if( os.isfile( filePath ) ) then
+						cmakecache {
+							[ var ] = archDir,
+						}
+						return
+					end
+				end
+
+				local filePath = path.join( dir, name )
+
+				if( os.isfile( filePath ) ) then
+					cmakecache {
+						[ var ] = dir,
+					}
+					return
+				end
+			end
+		end
+
+		local includePath = os.getenv( 'CMAKE_INCLUDE_PATH' )
+
+		if( includePath ) then
+			local paths = string.explode( includePath, separator )
+
+			for _,pathh in ipairs( paths ) do
+				for _,name in ipairs( names ) do
+					local filePath = path.join( pathh, name )
+
+					if( os.isfile( filePath ) ) then
+						cmakecache {
+							[ var ] = pathh,
+						}
+						return
+					end
+				end
+			end
+		end
+
+		local frameworkPath = os.getenv( 'CMAKE_FRAMEWORK_PATH' )
+
+		if( frameworkPath ) then
+			local paths = string.explode( frameworkPath, separator )
+
+			for _,pathh in ipairs( paths ) do
+				for _,name in ipairs( names ) do
+					local filePath = path.join( pathh, name )
+
+					if( os.isfile( filePath ) ) then
+						cmakecache {
+							[ var ] = pathh,
+						}
+						return
+					end
+				end
+			end
+		end
+	end
+
+	for _,hint in ipairs( hints ) do
+		for _,name in ipairs( names ) do
+			local filePath = path.join( hint, name )
+
+			if( os.isfile( filePath ) ) then
+				cmakecache {
+					[ var ] = hint,
+				}
+				return
+			end
+		end
+	end
+
+	-- TODO: 5. Search standard system environment variables
+	-- TODO: 6. Search CMake variables in the Platform files
+
+	for _,pathh in ipairs( paths ) do
+		for _,name in ipairs( names ) do
+			local filePath = path.join( pathh, name )
+
+			if( os.isfile( filePath ) ) then
+				cmakecache {
+					[ var ] = hint,
+				}
+				return
+			end
+		end
+	end
 end
 
 executors[ 'if' ] = function( cmd, condscope__refwrap )
