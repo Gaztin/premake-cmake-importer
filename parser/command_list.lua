@@ -731,7 +731,7 @@ executors[ 'find_path' ] = function( cmd )
 	end
 
 	if( searchCMakeEnvPath ) then
-		local separator           = iif( os.is( 'windows' ), ';', ':' )
+		local separator           = iif( os.ishost( 'windows' ), ';', ':' )
 		local libraryArchitecture = os.getenv( 'CMAKE_LIBRARY_ARCHITECTURE' )
 		local prefixPath          = os.getenv( 'CMAKE_PREFIX_PATH' )
 		local prefixes            = prefixPath and string.explode( prefixPath, separator ) or { }
