@@ -506,9 +506,7 @@ executors[ 'find_package' ] = function( cmd )
 
 		if( os.isfile( filePath ) ) then
 			local prevPackage = m.currentPackage
-			m.currentPackage = { }
-			m.currentPackage.name = packageName
-			m.currentPackage.path = path.getdirectory( filePath )
+			m.currentPackage = packageName
 
 			-- Load module script
 			m.parseScript( filePath )
