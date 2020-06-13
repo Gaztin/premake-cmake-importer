@@ -94,6 +94,10 @@ function m.isStringLiteral( str )
 	return ( str:startswith( '"' ) and str:endswith( '"' ) )
 end
 
+function m.toStringLiteral( str )
+	return m.isStringLiteral( str ) and str or ( '"' .. str .. '"' )
+end
+
 function m.toRawString( str )
 	str = m.resolveVariables( str )
 
