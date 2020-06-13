@@ -530,7 +530,7 @@ end
 
 executors[ 'find_library' ] = function( cmd )
 	-- Find library directories
-	m.findPath( cmd, 'LIBRARY', iif( os.ishost( 'windows' ), '.lib', '.a' ) )
+	m.findPath( cmd, 'LIBRARY', iif( os.istarget( 'windows' ), '.lib', '.a' ) )
 end
 
 executors[ 'find_program' ] = function( cmd )
