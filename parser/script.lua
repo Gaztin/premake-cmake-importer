@@ -295,4 +295,6 @@ function m.addSystemVariables()
 			XCODE_VERSION = xcodeVersion,
 		}
 	end
+
+	-- TODO: CMAKE_LIBRARY_ARCHITECTURE
 end
