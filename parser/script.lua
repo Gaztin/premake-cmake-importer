@@ -216,6 +216,7 @@ function m.addSystemVariables()
 		CMAKE_HOST_SYSTEM_PROCESSOR = m.HOST_SYSTEM_PROCESSOR,
 		CMAKE_HOST_SYSTEM_VERSION   = string.format( '%d.%d.%d', sysinfo.majorversion, sysinfo.minorversion, sysinfo.revision ),
 		CMAKE_HOST_SYSTEM           = '%{CMAKE_HOST_SYSTEM_NAME}.%{CMAKE_HOST_SYSTEM_VERSION}',
+		CMAKE_SIZEOF_VOID_P         = iif( os.is64bit(), 8, 4 ),
 	}
 
 	if( host == 'windows' ) then
