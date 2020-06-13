@@ -505,8 +505,15 @@ executors[ 'find_package' ] = function( cmd )
 		local filePath = path.join( m.CMAKE_MODULES_CACHE, fileName )
 
 		if( os.isfile( filePath ) ) then
+			local prevPackage = m.currentPackage
+			m.currentPackage = { }
+			m.currentPackage.name = packageName
+			m.currentPackage.path = path.getdirectory( filePath )
+
 			-- Load module script
 			m.parseScript( filePath )
+
+			m.currentPackage = prevPackage
 		end
 
 	else
