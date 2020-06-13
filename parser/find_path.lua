@@ -339,7 +339,7 @@ function m.findPath( cmd, keyword, extension )
 
 			if( os.isfile( filePath ) ) then
 				cmakecache {
-					[ var ] = hint,
+					[ var ] = pathh,
 				}
 
 				return pathh
