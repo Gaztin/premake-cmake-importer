@@ -561,7 +561,7 @@ executors[ 'find_path' ] = function( cmd )
 
 		if( option == 'HINTS' ) then
 			-- Directories to search in
-			while( not table.contains( possibleOptions, arguments[ 1 ] ) ) do
+			while( #arguments > 0 and not table.contains( possibleOptions, arguments[ 1 ] ) ) do
 				local arg = table.remove( arguments, 1 )
 
 				if( arg == 'ENV' ) then
@@ -575,7 +575,7 @@ executors[ 'find_path' ] = function( cmd )
 
 		elseif( option == 'PATHS' ) then
 			-- Directories to search in (prioritized last)
-			while( not table.contains( possibleOptions, arguments[ 1 ] ) ) do
+			while( #arguments > 0 and not table.contains( possibleOptions, arguments[ 1 ] ) ) do
 				local arg = table.remove( arguments, 1 )
 
 				if( arg == 'ENV' ) then
@@ -589,7 +589,7 @@ executors[ 'find_path' ] = function( cmd )
 
 		elseif( option == 'PATH_SUFFIXES' ) then
 			-- Subdirectories to search in
-			while( not table.contains( possibleOptions, arguments[ 1 ] ) ) do
+			while( #arguments > 0 and not table.contains( possibleOptions, arguments[ 1 ] ) ) do
 				local arg = table.remove( arguments, 1 )
 
 				table.insert( subDirs, arg )
