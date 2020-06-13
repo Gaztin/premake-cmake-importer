@@ -24,7 +24,7 @@ executors[ 'project' ] = function( cmd )
 end
 
 executors[ 'set' ] = function( cmd )
-	local arguments    = cmd.arguments
+	local arguments    = table.arraycopy( cmd.arguments )
 	local variableName = table.remove( arguments, 1 )
 	local values       = { }
 	local parentScope  = false
@@ -113,7 +113,7 @@ executors[ 'add_executable' ] = function( cmd )
 end
 
 executors[ 'add_library' ] = function( cmd )
-	local arguments = cmd.arguments
+	local arguments = table.arraycopy( cmd.arguments )
 
 	if( table.contains( { 'STATIC', 'SHARED', 'MODULE' }, arguments[ 2 ] ) ) then
 
@@ -165,7 +165,7 @@ executors[ 'add_library' ] = function( cmd )
 end
 
 executors[ 'target_include_directories' ] = function( cmd )
-	local arguments      = cmd.arguments
+	local arguments      = table.arraycopy( cmd.arguments )
 	local projectName    = resolveAlias( table.remove( arguments, 1 ) )
 	local currentProject = p.api.scope.project
 	local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
@@ -218,7 +218,7 @@ executors[ 'target_include_directories' ] = function( cmd )
 end
 
 executors[ 'target_link_libraries' ] = function( cmd )
-	local arguments      = cmd.arguments
+	local arguments      = table.arraycopy( cmd.arguments )
 	local projectName    = resolveAlias( table.remove( arguments, 1 ) )
 	local currentProject = p.api.scope.project
 	local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
@@ -271,7 +271,7 @@ executors[ 'target_link_libraries' ] = function( cmd )
 end
 
 executors[ 'target_compile_definitions' ] = function( cmd )
-	local arguments      = cmd.arguments
+	local arguments      = table.arraycopy( cmd.arguments )
 	-- According to the docs, cannot be an alias target
 	local targetName     = table.remove( arguments, 1 )
 	local projectToAmend = p.workspace.findproject( p.api.scope.workspace, targetName )
@@ -479,9 +479,9 @@ executors[ 'find_package' ] = function( cmd )
 	if( os.isfile( m.CMAKE_MODULES_CACHE_AVAILABLE ) ) then
 		-- TODO: Full signature
 		-- TODO: COMPONENTS and OPTIONAL_COMPONENTS
-		local arguments        = cmd.arguments
+		local arguments        = table.arraycopy( cmd.arguments )
 		local possible_options = { 'EXACT', 'QUIET', 'MODULE', 'REQUIRED', 'NO_POLICY_SCOPE' }
-		local packageName      = table.remove( cmd.arguments, 1 )
+		local packageName      = table.remove( arguments, 1 )
 		local version          = iif( arguments[ 1 ] and not table.contains( possible_options, arguments[ 1 ] ), table.remove( arguments, 1 ), '0.0.0' )
 		local options          = table.intersect( possible_options, arguments )
 
