@@ -508,6 +508,10 @@ executors[ 'find_package' ] = function( cmd )
 			local prevPackage = m.currentPackage
 			m.currentPackage = packageName
 
+			cmakecache {
+				[ packageName .. '_ROOT' ] = path.getdirectory( filePath ),
+			}
+
 			-- Load module script
 			m.parseScript( filePath )
 
