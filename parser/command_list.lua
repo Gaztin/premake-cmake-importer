@@ -525,17 +525,17 @@ end
 
 executors[ 'find_path' ] = function( cmd )
 	-- Find include directories
-	print( m.findPath( cmd, 'INCLUDE' ) )
+	m.findPath( cmd, 'INCLUDE' )
 end
 
 executors[ 'find_library' ] = function( cmd )
 	-- Find library directories
-	print( m.findPath( cmd, 'LIBRARY', iif( os.ishost( 'windows' ), '.lib', '.a' ) ) )
+	m.findPath( cmd, 'LIBRARY', iif( os.ishost( 'windows' ), '.lib', '.a' ) )
 end
 
 executors[ 'find_program' ] = function( cmd )
 	-- Find program directories
-	print( m.findPath( cmd, 'PROGRAM', iif( os.ishost( 'windows' ), '.exe', nil ) ) )
+	m.findPath( cmd, 'PROGRAM', iif( os.ishost( 'windows' ), '.exe', nil ) )
 end
 
 executors[ 'if' ] = function( cmd, condscope__refwrap )
