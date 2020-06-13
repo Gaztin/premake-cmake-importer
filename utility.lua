@@ -70,8 +70,8 @@ function m.resolveVariables( str )
 	return str
 end
 
-function m.expandVariable( var )
-	return p.api.scope.current.cmakevariables[ var ] or m.NOTFOUND
+function m.expandVariable( var, defaultValue )
+	return p.api.scope.current.cmakevariables[ var ] or defaultValue or m.NOTFOUND
 end
 
 function m.isStringLiteral( str )
