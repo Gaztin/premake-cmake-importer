@@ -65,7 +65,23 @@ function m.resolveVariables( str )
 		end
 	until( st == nil )
 
-	-- TODO: $CACHE{%S+}
+	-- Cache variables
+	repeat
+		st, en = string.find( str, '$CACHE{%S+}' )
+
+		if( st ~= nil ) then
+			local var   = string.sub( str, st + 5, en - 1 )
+			local vars  = p.api.scope.workspace.cmakecache
+			local value = vars[ var ]
+
+			if( value ~= nil ) then
+				local detokenizedValue = p.detoken.expand( value, vars )
+				str = string.sub( str, 1, st - 1 ) .. detokenizedValue .. string.sub( str, en + 1 )
+			else
+				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
+			end
+		end
+	until( st == nil )
 
 	return str
 end

@@ -6,3 +6,9 @@ p.api.register {
 	scope = 'config',
 	kind  = 'key-mixed',
 }
+
+p.api.register {
+	name  = 'cmakecache',
+	scope = 'workspace',
+	kind  = 'key-mixed',
+}
