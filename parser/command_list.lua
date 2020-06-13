@@ -482,7 +482,7 @@ executors[ 'find_package' ] = function( cmd )
 		local arguments        = table.arraycopy( cmd.arguments )
 		local possible_options = { 'EXACT', 'QUIET', 'MODULE', 'REQUIRED', 'NO_POLICY_SCOPE' }
 		local packageName      = table.remove( arguments, 1 )
-		local version          = iif( arguments[ 1 ] and not table.contains( possible_options, arguments[ 1 ] ), table.remove( arguments, 1 ), '0.0.0' )
+		local version          = ( arguments[ 1 ] and not table.contains( possible_options, arguments[ 1 ] ) ) and table.remove( arguments, 1 ) or '0.0.0'
 		local options          = table.intersect( possible_options, arguments )
 
 		if( table.contains( options, 'EXACT' ) ) then
@@ -734,7 +734,7 @@ executors[ 'find_path' ] = function( cmd )
 		local separator           = iif( os.is( 'windows' ), ';', ':' )
 		local libraryArchitecture = os.getenv( 'CMAKE_LIBRARY_ARCHITECTURE' )
 		local prefixPath          = os.getenv( 'CMAKE_PREFIX_PATH' )
-		local prefixes            = iif( prefixPath, string.explode( prefixPath, separator ), { } )
+		local prefixes            = prefixPath and string.explode( prefixPath, separator ) or { }
 
 		for _,prefix in ipairs( prefixes ) do
 			local dir = path.join( prefix, 'include' )
