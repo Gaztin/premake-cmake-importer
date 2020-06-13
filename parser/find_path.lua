@@ -12,7 +12,7 @@ local keywordDirs = {
 -- @extension(optional) is added at the end of the searched file paths.
 function m.findPath( cmd, keyword, extension )
 	extension = extension or ''
-	
+
 	local possibleOptions    = { 'HINTS', 'PATHS', 'PATH_SUFFIXES', 'DOC', 'REQUIRED',
 	                            'NO_DEFAULT_PATH', 'NO_PACKAGE_ROOT_PATH', 'NO_CMAKE_PATH',
 	                            'NO_CMAKE_ENVIRONMENT_PATH', 'NO_SYSTEM_ENVIRONMENT_PATH',
@@ -142,7 +142,8 @@ function m.findPath( cmd, keyword, extension )
 					cmakecache {
 						[ var ] = packageRoot,
 					}
-					return
+
+					return packageRoot
 				end
 			end
 		end
@@ -167,7 +168,8 @@ function m.findPath( cmd, keyword, extension )
 						cmakecache {
 							[ var ] = archDir,
 						}
-						return
+
+						return archDir
 					end
 				end
 
@@ -177,7 +179,8 @@ function m.findPath( cmd, keyword, extension )
 					cmakecache {
 						[ var ] = dir,
 					}
-					return
+
+					return dir
 				end
 			end
 		end
@@ -197,7 +200,8 @@ function m.findPath( cmd, keyword, extension )
 						cmakecache {
 							[ var ] = pathh,
 						}
-						return
+
+						return pathh
 					end
 				end
 			end
@@ -218,7 +222,8 @@ function m.findPath( cmd, keyword, extension )
 						cmakecache {
 							[ var ] = pathh,
 						}
-						return
+
+						return pathh
 					end
 				end
 			end
@@ -245,7 +250,8 @@ function m.findPath( cmd, keyword, extension )
 						cmakecache {
 							[ var ] = archDir,
 						}
-						return
+
+						return archDir
 					end
 				end
 
@@ -255,7 +261,8 @@ function m.findPath( cmd, keyword, extension )
 					cmakecache {
 						[ var ] = dir,
 					}
-					return
+
+					return dir
 				end
 			end
 		end
@@ -275,7 +282,8 @@ function m.findPath( cmd, keyword, extension )
 						cmakecache {
 							[ var ] = pathh,
 						}
-						return
+
+						return pathh
 					end
 				end
 			end
@@ -296,7 +304,8 @@ function m.findPath( cmd, keyword, extension )
 						cmakecache {
 							[ var ] = pathh,
 						}
-						return
+
+						return pathh
 					end
 				end
 			end
@@ -313,7 +322,8 @@ function m.findPath( cmd, keyword, extension )
 				cmakecache {
 					[ var ] = hint,
 				}
-				return
+
+				return hint
 			end
 		end
 	end
@@ -331,8 +341,11 @@ function m.findPath( cmd, keyword, extension )
 				cmakecache {
 					[ var ] = hint,
 				}
-				return
+
+				return pathh
 			end
 		end
 	end
+
+	return m.NOTFOUND
 end
