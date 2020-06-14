@@ -71,6 +71,7 @@ function m.parseScript( filePath )
 	cmakevariables {
 		PROJECT_SOURCE_DIR        = baseDir,
 		CMAKE_CONFIGURATION_TYPES = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' ),
+		CMAKE_CURRENT_LIST_DIR    = path.getdirectory( filePath ),
 	}
 
 	-- Execute commands in order
