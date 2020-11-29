@@ -22,9 +22,8 @@ function m.parseScript( filePath )
 		-- Trim leading whitespace
 		line = string.match( line, '^%s*(.*%S)' ) or ''
 
-		-- Skip empty lines and comments (but not bracket comments. those are covered later)
-		if( #line > 0 and ( line:sub( 1, 1 ) ~= '#' or line:sub( 1, 2 ) == '#[' or line:find( '%]=*%]' ) ) ) then
-			content = content .. line .. ' '
+		if( #line > 0 ) then
+			content = content .. m.trimTrailingComments( line ) .. ' '
 		end
 
 		line = file:read( '*l' )
@@ -135,6 +134,11 @@ function m.deserializeCommandList( content )
 
 	while( begin < #content ) do
 		local leftParenthesis, rightParenthesis = m.findMatchingParentheses( content, begin )
+
+		if( leftParenthesis == nil ) then
+			p.error( 'No matching parenthesis found: "%s"...', content:sub( begin, begin + 100 ) )
+		end
+
 		local command = {
 			name      = string.sub( content, begin, leftParenthesis - 1 ),
 			argString = string.sub( content, leftParenthesis + 1, rightParenthesis - 1 ),

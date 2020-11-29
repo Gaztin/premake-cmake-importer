@@ -108,32 +108,73 @@ function m.toRawString( str )
 	end
 end
 
+function m.findUncaptured( str, delim, startIndex )
+	-- Finds a substring within a string, but ignores any delimeters inside quotation marks
+	-- Firstly, replace all occurrances of: \"
+	-- But be careful, because we might run into a string that looks like: "\\" in which case we do not want to replace \" because that will turn into "\
+	-- So first of all, replace all occurrances of \\ with something else, THEN replace every occurrance of \".
+	local temp = str
+	temp       = temp:gsub( '\\\\', '__' )
+	temp       = temp:gsub( '\\\"', '__' )
+
+	startIndex = startIndex or 1
+
+	local captured = false
+	for i = startIndex, #temp do
+		-- TODO: delim might be multiple characters
+		local char = temp:sub( i, i )
+
+		if( char == '\"' ) then
+			captured = not captured
+		elseif( char == delim and not captured ) then
+			return i
+		end
+	end
+
+	return nil
+end
+
 function m.findMatchingParentheses( str, index )
-	index = index or 1
-
-	-- TODO: Don't count any parentheses inside string literals
-
-	local left = string.find( str, '(', index, true )
+	local left = m.findUncaptured( str, '(', index )
 	if( left == nil ) then
 		return nil
 	end
 
 	local numOpenParentheses = 1
+	local nxt = left
 
-	-- Find matching right parenthesis
-	for i = left + 1, #str do
-		local c = str:sub( i, i )
+	repeat
+		local nextRight = m.findUncaptured( str, ')', nxt + 1 )
+		nxt             = m.findUncaptured( str, '(', nxt + 1 )
 
-		if( c == '(' ) then
+		if( nxt and ( nextRight and nxt < nextRight ) or ( not nextRight ) ) then
 			numOpenParentheses = numOpenParentheses + 1
-		elseif( c == ')' ) then
+		elseif( nextRight ) then
 			numOpenParentheses = numOpenParentheses - 1
+			nxt = nextRight
 
 			if( numOpenParentheses == 0 ) then
-				return left, i
+				return left, nxt
 			end
 		end
-	end
+
+	until( nxt == nil )
 
 	return nil
+end
+
+function m.trimTrailingComments( str )
+	-- Ignore block comments
+	local comment = str:sub( 1, #str )
+	if( comment:find( '#%[(=*)%[' ) or comment:find( '#%](=*)%]' ) ) then
+		return str
+	end
+
+	-- Find uncaptured comment symbol	
+	local index = m.findUncaptured( str, "#" )
+	if( index == nil ) then
+		return str
+	end
+
+	return str:sub( 1, index - 1 )
 end
