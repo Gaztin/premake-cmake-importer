@@ -92,7 +92,7 @@ executors[ 'add_executable' ] = function( cmd )
 		prj._cmake = { }
 
 		kind( 'ConsoleApp' )
-		location( baseDir )
+		location( prj.cmakevariables.PROJECT_SOURCE_DIR )
 
 		for i=2,#arguments do
 			if( arguments[ i ] == 'WIN32' ) then
@@ -103,7 +103,7 @@ executors[ 'add_executable' ] = function( cmd )
 				local f = m.resolveVariables( arguments[ i ] )
 
 				for _,v in ipairs( string.explode( f, ' ' ) ) do
-					local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+					local rebasedSourceFile = path.rebase( v, prj.cmakevariables.PROJECT_SOURCE_DIR, os.getcwd() )
 
 					files { rebasedSourceFile }
 				end
