@@ -12,7 +12,15 @@ Premake extension for importing CMake input files into an existing workspace.
 * `target_compile_definitions`
 * `message`
 * `set_property` (only CACHE scopes currently)
-* `if`/`elseif`/`else`/`endif`
+* `find_package`
+* `find_path`
+* `find_library`
+* `find_program`
+* `include`
+* `if`
+* `elseif`
+* `else`
+* `endif`
 
 # 💿 Translated Cache Entries
 * `CMAKE_CXX_FLAGS`
