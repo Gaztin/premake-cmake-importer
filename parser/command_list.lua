@@ -12,6 +12,15 @@ function m.executeCommand( cmd, condscope__refwrap )
 	end
 end
 
+function m.resolveAlias( name )
+	for k,v in pairs( m.aliases ) do
+		if( k == name ) then
+			return v
+		end
+	end
+	return name
+end
+
 executors[ 'cmake_minimum_required' ] = function( cmd )
 	-- TODO: Throw if higher than @m._LASTEST_CMAKE_VERSION
 	m.downloadCMakeModules( m._LASTEST_CMAKE_VERSION )
@@ -55,8 +64,8 @@ executors[ 'set' ] = function( cmd )
 				end
 			end
 
-			if( cache_entries[ variableName ] == nil or force ) then
-				cache_entries[ variableName ] = table.implode( values, '', '', ' ' )
+			if( m.cache_entries[ variableName ] == nil or force ) then
+				m.cache_entries[ variableName ] = table.implode( values, '', '', ' ' )
 			end
 
 		else
@@ -85,7 +94,7 @@ executors[ 'add_executable' ] = function( cmd )
 	elseif( arguments[ 2 ] == 'ALIAS' ) then
 
 		-- Add alias
-		aliases[ arguments[ 1 ] ] = arguments[ 3 ]
+		m.aliases[ arguments[ 1 ] ] = arguments[ 3 ]
 
 	else
 		local prj  = project( arguments[ 1 ] )
@@ -127,7 +136,7 @@ executors[ 'add_library' ] = function( cmd )
 		local prj  = project( arguments[ 1 ] )
 		prj._cmake = { }
 
-		location( baseDir )
+		location( prj.cmakevariables.PROJECT_SOURCE_DIR )
 
 		-- Library type
 		if( arguments[ 2 ] == 'STATIC' ) then
@@ -142,7 +151,7 @@ executors[ 'add_library' ] = function( cmd )
 			local f = m.resolveVariables( arguments[ i ] )
 
 			for _,v in ipairs( string.explode( f, ' ' ) ) do
-				local rebasedSourceFile = path.rebase( v, baseDir, os.getcwd() )
+				local rebasedSourceFile = path.rebase( v, prj.cmakevariables.PROJECT_SOURCE_DIR, os.getcwd() )
 
 				files { rebasedSourceFile }
 			end
@@ -155,7 +164,7 @@ executors[ 'add_library' ] = function( cmd )
 	elseif( arguments[ 2 ] == 'ALIAS' ) then
 
 		-- Add alias
-		aliases[ arguments[ 1 ] ] = arguments[ 3 ]
+		m.aliases[ arguments[ 1 ] ] = arguments[ 3 ]
 
 	elseif( arguments[ 2 ] == 'INTERFACE' ) then
 
@@ -166,7 +175,7 @@ end
 
 executors[ 'target_include_directories' ] = function( cmd )
 	local arguments      = table.arraycopy( cmd.arguments )
-	local projectName    = resolveAlias( table.remove( arguments, 1 ) )
+	local projectName    = m.resolveAlias( table.remove( arguments, 1 ) )
 	local currentProject = p.api.scope.project
 	local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
 	local modifiers      = { }
@@ -219,7 +228,7 @@ end
 
 executors[ 'target_link_libraries' ] = function( cmd )
 	local arguments      = table.arraycopy( cmd.arguments )
-	local projectName    = resolveAlias( table.remove( arguments, 1 ) )
+	local projectName    = m.resolveAlias( table.remove( arguments, 1 ) )
 	local currentProject = p.api.scope.project
 	local projectToAmend = p.workspace.findproject( p.api.scope.workspace, projectName )
 	local modifiers      = { }
@@ -236,11 +245,12 @@ executors[ 'target_link_libraries' ] = function( cmd )
 	for _,arg in ipairs( arguments ) do
 		if( table.contains( { 'PRIVATE', 'PUBLIC', 'INTERFACE', 'LINK_INTERFACE_LIBRARIES', 'LINK_PRIVATE', 'LINK_PUBLIC' }, arg ) ) then
 			modifiers[ arg ] = true
+			-- TODO: Do something with this information
 		else
 			arg = m.resolveVariables( arg )
 
 			for _,v in ipairs( string.explode( arg, ' ' ) ) do
-				local targetName = resolveAlias( v )
+				local targetName = m.resolveAlias( v )
 				local prj        = p.workspace.findproject( p.api.scope.workspace, targetName )
 
 				-- Add includedirs marked PUBLIC
@@ -430,7 +440,7 @@ executors[ 'set_property' ] = function( cmd )
 		propertyHandler = function( entries, property, values )
 			if( property == 'STRINGS' ) then
 				for _,entry in ipairs( entries ) do
-					cache_entries_allowed[ entry ] = values
+					m.cache_entries_allowed[ entry ] = values
 				end
 			else
 				p.warn( 'Unhandled property %s in CACHE scope', property )

@@ -49,27 +49,14 @@ function m.parseScript( filePath )
 		end
 	until st == nil
 
-	local baseDir               = path.getdirectory( filePath )
-	local commandList           = m.deserializeCommandList( content )
-	local currentGroup          = p.api.scope.group
-	local aliases               = { }
-	local cache_entries         = { }
-	local cache_entries_allowed = { }
-
-	local function resolveAlias( name )
-		for k,v in pairs( aliases ) do
-			if( k == name ) then
-				return v
-			end
-		end
-		return name
-	end
+	local commandList  = m.deserializeCommandList( content )
+	local currentGroup = p.api.scope.group
 
 	-- Add predefined variables
 	m.addSystemVariables()
 
 	cmakevariables {
-		PROJECT_SOURCE_DIR        = baseDir,
+		PROJECT_SOURCE_DIR        = path.getdirectory( filePath ),
 		CMAKE_CONFIGURATION_TYPES = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' ),
 		CMAKE_CURRENT_LIST_DIR    = path.getdirectory( filePath ),
 	}
@@ -101,7 +88,7 @@ function m.parseScript( filePath )
 	-- TODO: Validate allowed cache entries against allowed cache entries
 
 	-- Handle cache entries
-	for entry,value in pairs( cache_entries ) do
+	for entry,value in pairs( m.cache_entries ) do
 		if( entry == 'CMAKE_CXX_FLAGS' ) then
 
 			-- Replace surrounding quotation marks
@@ -119,7 +106,7 @@ function m.parseScript( filePath )
 	end
 
 	-- Handle allowed cache entries
-	for entry,allowed in pairs( cache_entries_allowed ) do
+	for entry,allowed in pairs( m.cache_entries_allowed ) do
 		if( entry == 'CMAKE_BUILD_TYPE' ) then
 
 			-- Remove surrounding quotation marks

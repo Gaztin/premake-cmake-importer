@@ -1,6 +1,9 @@
-local p               = premake
-p.extensions.impcmake = { }
-local m               = premake.extensions.impcmake
+local p                 = premake
+p.extensions.impcmake   = { }
+local m                 = premake.extensions.impcmake
+m.aliases               = { }
+m.cache_entries         = { }
+m.cache_entries_allowed = { }
 
 require 'api'
 require 'utility'
