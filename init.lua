@@ -9,11 +9,11 @@ require 'api'
 require 'utility'
 require 'scope'
 require 'cmake_modules_cache'
+require 'commands'
 
 require 'parser/find_path'
 require 'parser/conditions'
 require 'parser/script'
-require 'parser/command_list'
 require 'parser/directory'
 
 m._VERSION               = '1.0.0'
