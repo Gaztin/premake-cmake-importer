@@ -37,5 +37,7 @@ m.IGNORE   = 'IGNORE'
 m.NOTFOUND = 'NOTFOUND'
 
 function cmake_project( filePath )
+	m.scope.push()
 	m.parseDirectory( path.rebase( filePath, '.', 'parser' ) )
+	m.scope.pop()
 end

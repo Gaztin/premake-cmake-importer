@@ -23,10 +23,5 @@ end
 
 -- Get current scope
 function m.scope.current()
-	if( l.current == nil ) then
-		-- Create root scope if none exists
-		l.current = m.scope.push()
-	end
-
 	return l.current
 end
