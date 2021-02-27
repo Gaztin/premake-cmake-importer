@@ -54,11 +54,11 @@ function m.parseScript( filePath )
 	-- Add predefined variables
 	m.addSystemVariables()
 
-	cmakevariables {
-		PROJECT_SOURCE_DIR        = path.getdirectory( filePath ),
-		CMAKE_CONFIGURATION_TYPES = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' ),
-		CMAKE_CURRENT_LIST_DIR    = path.getdirectory( filePath ),
-	}
+	local scope = m.scope.current()
+
+	scope.variables[ 'PROJECT_SOURCE_DIR' ]        = path.getdirectory( filePath )
+	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
+	scope.variables[ 'CMAKE_CURRENT_LIST_DIR' ]    = path.getdirectory( filePath )
 
 	-- Execute commands in order
 
@@ -185,92 +185,66 @@ function m.addSystemVariables()
 	local target  = os.target()
 	local sysinfo = os.getversion()
 	local action  = _ACTION
+	local scope   = m.scope.current()
 
 	-- Constants
-
-	cmakevariables {
-		[ m.ON       ] = m.ON,
-		[ m.YES      ] = m.YES,
-		[ m.TRUE     ] = m.TRUE,
-		[ m.Y        ] = m.Y,
-		[ m.OFF      ] = m.OFF,
-		[ m.NO       ] = m.NO,
-		[ m.FALSE    ] = m.FALSE,
-		[ m.N        ] = m.N,
-		[ m.IGNORE   ] = m.IGNORE,
-		[ m.NOTFOUND ] = m.NOTFOUND,
-	}
+	scope.variables[ m.ON       ] = m.ON
+	scope.variables[ m.YES      ] = m.YES
+	scope.variables[ m.TRUE     ] = m.TRUE
+	scope.variables[ m.Y        ] = m.Y
+	scope.variables[ m.OFF      ] = m.OFF
+	scope.variables[ m.NO       ] = m.NO
+	scope.variables[ m.FALSE    ] = m.FALSE
+	scope.variables[ m.N        ] = m.N
+	scope.variables[ m.IGNORE   ] = m.IGNORE
+	scope.variables[ m.NOTFOUND ] = m.NOTFOUND
 
 	-- Host system
-
-	cmakevariables {
-		CMAKE_HOST_SYSTEM_NAME      = m.HOST_SYSTEM_NAME,
-		CMAKE_HOST_SYSTEM_PROCESSOR = m.HOST_SYSTEM_PROCESSOR,
-		CMAKE_HOST_SYSTEM_VERSION   = string.format( '%d.%d.%d', sysinfo.majorversion, sysinfo.minorversion, sysinfo.revision ),
-		CMAKE_HOST_SYSTEM           = '%{CMAKE_HOST_SYSTEM_NAME}.%{CMAKE_HOST_SYSTEM_VERSION}',
-		CMAKE_SIZEOF_VOID_P         = iif( os.is64bit(), 8, 4 ),
-	}
+	scope.variables[ 'CMAKE_HOST_SYSTEM_NAME' ]      = m.HOST_SYSTEM_NAME
+	scope.variables[ 'CMAKE_HOST_SYSTEM_PROCESSOR' ] = m.HOST_SYSTEM_PROCESSOR
+	scope.variables[ 'CMAKE_HOST_SYSTEM_VERSION' ]   = string.format( '%d.%d.%d', sysinfo.majorversion, sysinfo.minorversion, sysinfo.revision )
+	scope.variables[ 'CMAKE_HOST_SYSTEM' ]           = '%{CMAKE_HOST_SYSTEM_NAME}.%{CMAKE_HOST_SYSTEM_VERSION}'
+	scope.variables[ 'CMAKE_SIZEOF_VOID_P' ]         = iif( os.is64bit(), 8, 4 )
 
 	if( host == 'windows' ) then
-		cmakevariables {
-			CMAKE_HOST_WIN32 = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_HOST_WIN32' ] = m.TRUE
+
 		if( m.HOST_SYSTEM_NAME:startswith( 'CYGWIN' ) ) then
-			cmakevariables {
-				CMAKE_HOST_CYGWIN = m.TRUE,
-			}
+			scope.variables[ 'CMAKE_HOST_CYGWIN' ] = m.TRUE
 		elseif( m.HOST_SYSTEM_NAME:startswith( 'MINGW' ) ) then
-			cmakevariables {
-				CMAKE_HOST_MINGW = m.TRUE,
-			}
+			scope.variables[ 'CMAKE_HOST_MINGW' ] = m.TRUE
 		end
 	elseif( host == 'macosx' ) then
-		cmakevariables {
-			CMAKE_HOST_APPLE = m.TRUE,
-			CMAKE_HOST_UNIX  = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_HOST_APPLE' ] = m.TRUE
+		scope.variables[ 'CMAKE_HOST_UNIX' ]  = m.TRUE
 	elseif( host == 'solaris' ) then
-		cmakevariables {
-			CMAKE_HOST_SOLARIS = m.TRUE,
-			CMAKE_HOST_UNIX    = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_HOST_SOLARIS' ] = m.TRUE
+		scope.variables[ 'CMAKE_HOST_UNIX' ]    = m.TRUE
 	end
 
 	-- Target system
 
 	if( host == target ) then
-		cmakevariables {
-			CMAKE_SYSTEM_PROCESSOR = '%{CMAKE_HOST_SYSTEM_PROCESSOR}',
-			CMAKE_SYSTEM_VERSION   = '%{CMAKE_HOST_SYSTEM_VERSION}',
-		}
+		scope.variables[ 'CMAKE_SYSTEM_PROCESSOR' ] = '%{CMAKE_HOST_SYSTEM_PROCESSOR}'
+		scope.variables[ 'CMAKE_SYSTEM_VERSION' ]   = '%{CMAKE_HOST_SYSTEM_VERSION}'
 	end
 
 	if( target == 'windows' ) then
-		cmakevariables {
-			CMAKE_SYSTEM_NAME = 'Windows',
-			WIN32             = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_SYSTEM_NAME' ] = 'Windows'
+		scope.variables[ 'WIN32' ]             = m.TRUE
 	elseif( target == 'macosx' ) then
-		cmakevariables {
-			CMAKE_SYSTEM_NAME = 'Apple',
-			APPLE             = m.TRUE,
-			UNIX              = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_SYSTEM_NAME' ] = 'Apple'
+		scope.variables[ 'APPLE' ]             = m.TRUE
+		scope.variables[ 'UNIX' ]              = m.TRUE
 	elseif( target == 'android' ) then
-		cmakevariables {
-			CMAKE_SYSTEM_NAME = 'Android',
-			ANDROID           = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_SYSTEM_NAME' ] = 'Android'
+		scope.variables[ 'ANDROID' ]           = m.TRUE
 	elseif( target == 'ios' ) then
-		cmakevariables {
-			CMAKE_SYSTEM_NAME = 'iOS',
-			IOS               = m.TRUE,
-		}
+		scope.variables[ 'CMAKE_SYSTEM_NAME' ] = 'iOS'
+		scope.variables[ 'IOS' ]               = m.TRUE
 	end
 
-	cmakevariables {
-		CMAKE_SYSTEM = '%{CMAKE_SYSTEM_NAME}.%{CMAKE_SYSTEM_VERSION}'
-	}
+	scope.variables[ 'CMAKE_SYSTEM' ] = '%{CMAKE_SYSTEM_NAME}.%{CMAKE_SYSTEM_VERSION}'
 
 	-- Generators
 
@@ -283,10 +257,8 @@ function m.addSystemVariables()
 	if( action == 'Xcode4' ) then
 		local xcodeVersion = os.outputof( '/usr/bin/xcodebuild -version' )
 
-		cmakevariables {
-			XCODE         = m.TRUE,
-			XCODE_VERSION = xcodeVersion,
-		}
+		scope.variables[ 'XCODE' ]         = m.TRUE
+		scope.variables[ 'XCODE_VERSION' ] = xcodeVersion
 	end
 
 	-- TODO: CMAKE_LIBRARY_ARCHITECTURE

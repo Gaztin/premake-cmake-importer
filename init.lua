@@ -7,6 +7,7 @@ m.cache_entries_allowed = { }
 
 require 'api'
 require 'utility'
+require 'scope'
 require 'cmake_modules_cache'
 
 require 'parser/find_path'

@@ -33,6 +33,7 @@ executors[ 'project' ] = function( cmd )
 end
 
 executors[ 'set' ] = function( cmd )
+	local scope        = m.scope.current()
 	local arguments    = table.arraycopy( cmd.arguments )
 	local variableName = table.remove( arguments, 1 )
 	local values       = { }
@@ -74,13 +75,13 @@ executors[ 'set' ] = function( cmd )
 	end
 
 	if( not isCache ) then
-		if( parentScope ) then
-			p.warn( 'Unsupported option PARENT_SCOPE was declared for command "%s"', cmd.name )
-		end
+		local value = table.concat( values, ' ' )
 
-		cmakevariables {
-			[ variableName ] = table.implode( values, '', '', ' ' ),
-		}
+		if( parentScope ) then
+			scope.parent.variables[ variableName ] = value
+		else
+			scope.variables[ variableName ] = value
+		end
 	end
 end
 
@@ -97,11 +98,12 @@ executors[ 'add_executable' ] = function( cmd )
 		m.aliases[ arguments[ 1 ] ] = arguments[ 3 ]
 
 	else
-		local prj  = project( arguments[ 1 ] )
-		prj._cmake = { }
+		local scope = m.scope.current()
+		local prj   = project( arguments[ 1 ] )
+		prj._cmake  = { }
 
 		kind( 'ConsoleApp' )
-		location( prj.cmakevariables.PROJECT_SOURCE_DIR )
+		location( scope.variables.PROJECT_SOURCE_DIR )
 
 		for i=2,#arguments do
 			if( arguments[ i ] == 'WIN32' ) then
@@ -112,7 +114,7 @@ executors[ 'add_executable' ] = function( cmd )
 				local f = m.resolveVariables( arguments[ i ] )
 
 				for _,v in ipairs( string.explode( f, ' ' ) ) do
-					local rebasedSourceFile = path.rebase( v, prj.cmakevariables.PROJECT_SOURCE_DIR, os.getcwd() )
+					local rebasedSourceFile = path.rebase( v, scope.variables.PROJECT_SOURCE_DIR, os.getcwd() )
 
 					files { rebasedSourceFile }
 				end
@@ -133,10 +135,11 @@ executors[ 'add_library' ] = function( cmd )
 			p.error( 'Library uses unsupported modifier "%s"', arguments[ 3 ] )
 		end
 
-		local prj  = project( arguments[ 1 ] )
-		prj._cmake = { }
+		local scope = m.scope.current()
+		local prj   = project( arguments[ 1 ] )
+		prj._cmake  = { }
 
-		location( prj.cmakevariables.PROJECT_SOURCE_DIR )
+		location( scope.variables.PROJECT_SOURCE_DIR )
 
 		-- Library type
 		if( arguments[ 2 ] == 'STATIC' ) then

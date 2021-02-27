@@ -30,17 +30,18 @@ function m.isTrue( value )
 end
 
 function m.resolveVariables( str )
+	local scope = m.scope.current()
+
 	-- Global variables
 	repeat
 		st, en = string.find( str, '${%S+}' )
 
 		if( st ~= nil ) then
 			local var   = string.sub( str, st + 2, en - 1 )
-			local vars  = p.api.scope.current.cmakevariables
-			local value = vars[ var ]
+			local value = scope.variables[ var ]
 
 			if( value ~= nil ) then
-				local detokenizedValue = p.detoken.expand( value, vars )
+				local detokenizedValue = p.detoken.expand( value, scope.variables )
 				str = string.sub( str, 1, st - 1 ) .. detokenizedValue .. string.sub( str, en + 1 )
 			else
 				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
@@ -57,7 +58,7 @@ function m.resolveVariables( str )
 			local value = os.getenv( var )
 
 			if( value ~= nil ) then
-				local detokenizedValue = p.detoken.expand( value, vars )
+				local detokenizedValue = p.detoken.expand( value, scope.variables )
 				str = string.sub( str, 1, st - 1 ) .. detokenizedValue .. string.sub( str, en + 1 )
 			else
 				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
