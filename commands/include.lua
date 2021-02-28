@@ -27,9 +27,7 @@ function m.commands.include( cmd )
 		m.parseScript( file )
 
 		if( resultVar ) then
-			cmakecache {
-				[ resultVar ] = file,
-			}
+			m.cache_entries[ resultVar ] = file
 		end
 	else
 		-- TODO: May be module, try to find <modulename>.cmake

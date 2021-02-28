@@ -131,16 +131,14 @@ local function findPath( cmd, keyword, extension )
 	-- Apply options
 
 	if( searchPackageRoot ) then
-		local packageRoot = p.api.scope.workspace.cmakecache[ m.currentPackage .. '_ROOT' ]
+		local packageRoot = m.cache_entries[ m.currentPackage .. '_ROOT' ]
 
 		if( packageRoot ) then
 			for _,name in ipairs( names ) do
 				local filePath = path.join( packageRoot, name )
 
 				if( os.isfile( filePath ) ) then
-					cmakecache {
-						[ var ] = packageRoot,
-					}
+					m.cache_entries[ var ] = packageRoot
 
 					return packageRoot
 				end
@@ -164,9 +162,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( archDir, name )
 
 					if( os.isfile( filePath ) ) then
-						cmakecache {
-							[ var ] = archDir,
-						}
+						m.cache_entries[ var ] = archDir
 
 						return archDir
 					end
@@ -175,9 +171,7 @@ local function findPath( cmd, keyword, extension )
 				local filePath = path.join( dir, name )
 
 				if( os.isfile( filePath ) ) then
-					cmakecache {
-						[ var ] = dir,
-					}
+					m.cache_entries[ var ] = dir
 
 					return dir
 				end
@@ -196,9 +190,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						cmakecache {
-							[ var ] = pathh,
-						}
+						m.cache_entries[ var ] = pathh
 
 						return pathh
 					end
@@ -218,9 +210,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						cmakecache {
-							[ var ] = pathh,
-						}
+						m.cache_entries[ var ] = pathh
 
 						return pathh
 					end
@@ -246,9 +236,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( archDir, name )
 
 					if( os.isfile( filePath ) ) then
-						cmakecache {
-							[ var ] = archDir,
-						}
+						m.cache_entries[ var ] = archDir
 
 						return archDir
 					end
@@ -257,9 +245,7 @@ local function findPath( cmd, keyword, extension )
 				local filePath = path.join( dir, name )
 
 				if( os.isfile( filePath ) ) then
-					cmakecache {
-						[ var ] = dir,
-					}
+					m.cache_entries[ var ] = dir
 
 					return dir
 				end
@@ -278,9 +264,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						cmakecache {
-							[ var ] = pathh,
-						}
+						m.cache_entries[ var ] = pathh
 
 						return pathh
 					end
@@ -300,9 +284,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						cmakecache {
-							[ var ] = pathh,
-						}
+						m.cache_entries[ var ] = pathh
 
 						return pathh
 					end
@@ -318,9 +300,7 @@ local function findPath( cmd, keyword, extension )
 			local filePath = path.join( hint, name )
 
 			if( os.isfile( filePath ) ) then
-				cmakecache {
-					[ var ] = hint,
-				}
+				m.cache_entries[ var ] = hint
 
 				return hint
 			end
@@ -337,9 +317,7 @@ local function findPath( cmd, keyword, extension )
 			local filePath = path.join( pathh, name )
 
 			if( os.isfile( filePath ) ) then
-				cmakecache {
-					[ var ] = pathh,
-				}
+				m.cache_entries[ var ] = pathh
 
 				return pathh
 			end
@@ -499,9 +477,8 @@ function m.commands.find_package( cmd )
 				local prevPackage = m.currentPackage
 				m.currentPackage = packageName
 
-				cmakecache {
-					[ packageName .. '_ROOT' ] = path.getdirectory( filePath ),
-				}
+				local fileDir = path.getdirectory( filePath )
+				m.cache_entries[ packageName .. '_ROOT' ] = fileDir
 
 				local verCount   = 0
 				local verNumbers = { }

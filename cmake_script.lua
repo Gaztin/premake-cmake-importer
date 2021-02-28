@@ -107,9 +107,6 @@ function m.parseScript( filePath )
 			local options = value:explode( ' ' )
 
 			buildoptions( options )
-
-		else
-			p.warn( 'Unhandled cache entry %s', entry )
 		end
 	end
 
