@@ -5,9 +5,9 @@ m.aliases               = { }
 m.cache_entries         = { }
 m.cache_entries_allowed = { }
 
-require 'cmake_api'
 require 'cmake_commands'
 require 'cmake_conditions'
+require 'cmake_fields'
 require 'cmake_modules_cache'
 require 'cmake_scope'
 require 'cmake_script'
