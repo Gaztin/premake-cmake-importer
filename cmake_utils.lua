@@ -13,7 +13,9 @@ function m.isTrue( value )
 	elseif( t == 'number' ) then
 		return ( value ~= 0 )
 	elseif( t == 'string' ) then
-		if( ( value == m.ON ) or ( value == m.YES ) or ( value == m.TRUE ) or ( value == m.Y ) ) then
+		if( m.isStringLiteral( value ) ) then
+			return true
+		elseif( ( value == m.ON ) or ( value == m.YES ) or ( value == m.TRUE ) or ( value == m.Y ) ) then
 			return true
 		elseif( ( value == m.OFF ) or ( value == m.NO ) or ( value == m.FALSE ) or ( value == m.N ) or ( value == m.IGNORE ) or ( value == m.NOTFOUND ) ) then
 			return false
