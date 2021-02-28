@@ -5,16 +5,13 @@ m.aliases               = { }
 m.cache_entries         = { }
 m.cache_entries_allowed = { }
 
-require 'api'
-require 'utility'
-require 'scope'
+require 'cmake_api'
+require 'cmake_commands'
+require 'cmake_conditions'
 require 'cmake_modules_cache'
-require 'commands'
-
-require 'parser/find_path'
-require 'parser/conditions'
-require 'parser/script'
-require 'parser/directory'
+require 'cmake_scope'
+require 'cmake_script'
+require 'cmake_utils'
 
 m._VERSION               = '1.0.0'
 m._LASTEST_CMAKE_VERSION = '3.17.3'
@@ -38,6 +35,6 @@ m.NOTFOUND = 'NOTFOUND'
 
 function cmake_project( filePath )
 	m.scope.push()
-	m.parseDirectory( path.rebase( filePath, '.', 'parser' ) )
+	m.parseScript( filePath )
 	m.scope.pop()
 end
