@@ -479,6 +479,7 @@ function m.commands.find_package( cmd )
 
 				local fileDir = path.getdirectory( filePath )
 				m.cache_entries[ packageName .. '_ROOT' ] = fileDir
+				m.cache_entries[ packageName .. '_DIR'  ] = fileDir
 
 				local verCount   = 0
 				local verNumbers = { }
