@@ -5,13 +5,16 @@ function m.commands.add_library( cmd )
 	local arguments = table.arraycopy( cmd.arguments )
 
 	if( table.contains( { 'STATIC', 'SHARED', 'MODULE' }, arguments[ 2 ] ) ) then
-		local scope = m.scope.current()
-
 		-- Unused or unsupported modifiers
 		if( arguments[ 3 ] == 'EXCLUDE_FROM_ALL' ) then
 			table.remove( arguments, 3 )
 		elseif( arguments[ 3 ] == 'IMPORTED' ) then
 			p.error( 'Library uses unsupported modifier "%s"', arguments[ 3 ] )
+		end
+		
+		local wks = p.api.scope.workspace
+		if( p.workspace.findproject( wks, arguments[ 1 ] ) ) then
+			p.error( 'add_library failed. A project by the name "%s" already exists in the current workspace.', arguments[ 1 ] )
 		end
 
 		local scope = m.scope.current()

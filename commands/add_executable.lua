@@ -14,6 +14,11 @@ function m.commands.add_executable( cmd )
 		m.aliases[ arguments[ 1 ] ] = arguments[ 3 ]
 
 	else
+		local wks = p.api.scope.workspace
+		if( p.workspace.findproject( wks, arguments[ 1 ] ) ) then
+			p.error( 'add_executable failed. A project by the name "%s" already exists in the current workspace.', arguments[ 1 ] )
+		end
+
 		local scope = m.scope.current()
 		local prj   = project( arguments[ 1 ] )
 		prj._cmake  = { }
