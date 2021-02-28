@@ -88,7 +88,8 @@ function m.resolveVariables( str )
 end
 
 function m.expandVariable( var, defaultValue )
-	return p.api.scope.current.cmakevariables[ var ] or defaultValue or m.NOTFOUND
+	local scope = m.scope.current()
+	return scope.variables[ var ] or defaultValue or m.NOTFOUND
 end
 
 function m.isStringLiteral( str )
