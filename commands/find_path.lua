@@ -366,49 +366,178 @@ end
 
 function m.commands.find_package( cmd )
 	if( os.isfile( m.CMAKE_MODULES_CACHE_AVAILABLE ) ) then
-		-- TODO: Full signature
-		-- TODO: COMPONENTS and OPTIONAL_COMPONENTS
-		local arguments        = table.arraycopy( cmd.arguments )
-		local possible_options = { 'EXACT', 'QUIET', 'MODULE', 'REQUIRED', 'NO_POLICY_SCOPE' }
-		local packageName      = table.remove( arguments, 1 )
-		local version          = ( arguments[ 1 ] and not table.contains( possible_options, arguments[ 1 ] ) ) and table.remove( arguments, 1 ) or '0.0.0'
-		local options          = table.intersect( possible_options, arguments )
+		local arguments              = table.arraycopy( cmd.arguments )
+		local packageName            = table.remove( arguments, 1 )
+		local possible_basic_options = { 'EXACT', 'QUIET', 'MODULE', 'REQUIRED', 'COMPONENTS', 'OPTIONAL_COMPONENTS', 'NO_POLICY_SCOPE' }
+		local possible_extra_options = { 'CONFIG', 'NO_MODULE', 'NAMES', 'CONFIGS', 'HINTS', 'PATHS',
+		                                 'PATH_SUFFIXES', 'NO_DEFAULT_PATH', 'NO_PACKAGE_ROOT_PATH',
+		                                 'NO_CMAKE_PATH', 'NO_CMAKE_ENVIRONMENT_PATH',
+		                                 'NO_SYSTEM_ENVIRONMENT_PATH', 'NO_CMAKE_PACKAGE_REGISTRY',
+		                                 'NO_CMAKE_BUILDS_PATH', 'NO_CMAKE_SYSTEM_PATH',
+		                                 'NO_CMAKE_SYSTEM_PACKAGE_REGISTRY', 'CMAKE_FIND_ROOT_PATH_BOTH',
+		                                 'ONLY_CMAKE_FIND_ROOT_PATH', 'NO_CMAKE_FIND_ROOT_PATH' }
+		local possible_full_options  = table.join( possible_basic_options, possible_extra_options )
+		local version                = ( arguments[ 1 ] and not table.contains( possible_full_options, arguments[ 1 ] ) ) and table.remove( arguments, 1 )
+		local basic_options          = table.intersect( possible_basic_options, arguments )
+		local exact                  = false
+		local quiet                  = false
+		local required               = false
+		local requiredComponents     = { }
+		local optionalComponents     = { }
 
-		if( table.contains( options, 'EXACT' ) ) then
-			-- TODO: EXACT
+		while( #arguments > 0 ) do
+			local arg = table.remove( arguments, 1 )
+
+			if( table.contains( possible_extra_options, arg ) ) then
+				configMode = true
+			end
+
+			if( arg == 'EXACT' ) then
+				exact = true
+
+			elseif( arg == 'QUIET' ) then
+				quiet = true
+
+			elseif( arg == 'MODULE' ) then
+				-- TODO: MODULE
+
+			elseif( arg == 'REQUIRED' or arg == 'COMPONENTS' ) then
+				required = true
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+					table.insert( requiredComponents, arg )
+				end
+
+			elseif( arg == 'OPTIONAL_COMPONENTS' ) then
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+					table.insert( optionalComponents, arg )
+				end
+
+			elseif( arg == 'NO_POLICY_SCOPE' ) then
+				-- TODO: NO_POLICY_SCOPE
+
+			elseif( arg == 'CONFIG' ) then
+				-- TODO: CONFIG
+
+			elseif( arg == 'NO_MODULE' ) then
+				-- TODO: NO_MODULE
+
+			elseif( arg == 'NAMES' ) then
+				-- TODO: NAMES
+				arg = table.remove( arguments, 1 )
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+				end
+
+			elseif( arg == 'CONFIGS' ) then
+				-- TODO: CONFIGS
+				arg = table.remove( arguments, 1 )
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+				end
+
+			elseif( arg == 'HINTS' ) then
+				-- TODO: HINTS
+				arg = table.remove( arguments, 1 )
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+				end
+
+			elseif( arg == 'PATHS' ) then
+				-- TODO: PATHS
+				arg = table.remove( arguments, 1 )
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+				end
+
+			elseif( arg == 'PATH_SUFFIXES' ) then
+				-- TODO: PATH_SUFFIXES
+				arg = table.remove( arguments, 1 )
+				while( #arguments > 0 and not table.contains( possible_full_options, arg ) ) do
+					arg = table.remove( arguments, 1 )
+				end
+
+			elseif( arg == 'NO_DEFAULT_PATH' ) then
+				-- TODO: NO_DEFAULT_PATH
+
+			elseif( arg == 'NO_PACKAGE_ROOT_PATH' ) then
+				-- TODO: NO_PACKAGE_ROOT_PATH
+
+			elseif( arg == 'NO_CMAKE_PATH' ) then
+				-- TODO: NO_CMAKE_PATH
+
+			elseif( arg == 'NO_CMAKE_ENVIRONMENT_PATH' ) then
+				-- TODO: NO_CMAKE_ENVIRONMENT_PATH
+
+			elseif( arg == 'NO_SYSTEM_ENVIRONMENT_PATH' ) then
+				-- TODO: NO_SYSTEM_ENVIRONMENT_PATH
+
+			elseif( arg == 'NO_CMAKE_PACKAGE_REGISTRY' ) then
+				-- TODO: NO_CMAKE_PACKAGE_REGISTRY
+
+			elseif( arg == 'NO_CMAKE_BUILDS_PATH' ) then
+				-- TODO: NO_CMAKE_BUILDS_PATH
+
+			elseif( arg == 'NO_CMAKE_SYSTEM_PATH' ) then
+				-- TODO: NO_CMAKE_SYSTEM_PATH
+
+			elseif( arg == 'NO_CMAKE_SYSTEM_PACKAGE_REGISTRY' ) then
+				-- TODO: NO_CMAKE_SYSTEM_PACKAGE_REGISTRY
+
+			elseif( arg == 'CMAKE_FIND_ROOT_PATH_BOTH' or arg == 'ONLY_CMAKE_FIND_ROOT_PATH' or arg == 'NO_CMAKE_FIND_ROOT_PATH' ) then
+				-- TODO: CMAKE_FIND_ROOT_PATH_BOTH | ONLY_CMAKE_FIND_ROOT_PATH | NO_CMAKE_FIND_ROOT_PATH
+
+			end
 		end
-		if( table.contains( options, 'QUIET' ) ) then
-			-- TODO: QUET
+
+		if( not configMode ) then
+			local fileName = string.format( 'Find%s.cmake', packageName )
+			local filePath = path.join( m.CMAKE_MODULES_CACHE, fileName )
+
+			if( os.isfile( filePath ) ) then
+				local prevPackage = m.currentPackage
+				m.currentPackage = packageName
+
+				cmakecache {
+					[ packageName .. '_ROOT' ] = path.getdirectory( filePath ),
+				}
+
+				local verCount   = 0
+				local verNumbers = { }
+				for it in string.gmatch( version, '%d+' ) do
+					verCount               = verCount + 1
+					verNumbers[ verCount ] = it
+				end
+
+				-- Set up scope
+				local scope = m.scope.push()
+				scope.variables[ 'CMAKE_FIND_PACKAGE_NAME'            ] = packageName
+				scope.variables[ packageName .. '_FIND_REQUIRED'      ] = required and m.TRUE or m.FALSE
+				scope.variables[ packageName .. '_FIND_QUIETLY'       ] = quiet and m.TRUE or m.FALSE
+				scope.variables[ packageName .. '_FIND_VERSION'       ] = verison or m.NOTFOUND
+				scope.variables[ packageName .. '_FIND_VERSION_MAJOR' ] = verNumbers[ 1 ] or m.NOTFOUND
+				scope.variables[ packageName .. '_FIND_VERSION_MINOR' ] = verNumbers[ 2 ] or m.NOTFOUND
+				scope.variables[ packageName .. '_FIND_VERSION_PATCH' ] = verNumbers[ 3 ] or m.NOTFOUND
+				scope.variables[ packageName .. '_FIND_VERSION_TWEAK' ] = verNumbers[ 4 ] or m.NOTFOUND
+				scope.variables[ packageName .. '_FIND_VERSION_COUNT' ] = verCount
+				scope.variables[ packageName .. '_FIND_VERSION_EXACT' ] = exact and m.TRUE or m.FALSE
+				scope.variables[ packageName .. '_FIND_COMPONENTS'    ] = table.implode( table.join( requiredComponents, optionalComponents ), '"', '"', ' ' )
+
+				for i,requiredComponent in ipairs( requiredComponents ) do
+					scope.variables[ packageName .. '_FIND_REQUIRED_' .. requiredComponent ] = m.TRUE
+				end
+				for i,optionalComponent in ipairs( optionalComponents ) do
+					scope.variables[ packageName .. '_FIND_REQUIRED_' .. optionalComponent ] = m.FALSE
+				end
+
+				-- Load module script
+				m.parseScript( filePath )
+				m.scope.pop()
+
+				m.currentPackage = prevPackage
+			end
 		end
-		if( table.contains( options, 'MODULE' ) ) then
-			-- TODO: MODULE
-		end
-		if( table.contains( options, 'REQUIRED' ) ) then
-			-- TODO: REQUIRED
-		end
-		if( table.contains( options, 'NO_POLICY_SCOPE' ) ) then
-			-- TODO: NO_POLICY_SCOPE
-		end
-
-		local fileName = string.format( 'Find%s.cmake', packageName )
-		local filePath = path.join( m.CMAKE_MODULES_CACHE, fileName )
-
-		if( os.isfile( filePath ) ) then
-			local prevPackage = m.currentPackage
-			m.currentPackage = packageName
-
-			cmakecache {
-				[ packageName .. '_ROOT' ] = path.getdirectory( filePath ),
-			}
-
-			-- Load module script
-			m.scope.push()
-			m.parseScript( filePath )
-			m.scope.pop()
-
-			m.currentPackage = prevPackage
-		end
-
 	else
 		p.error( 'CMake module cache is not available for command "%s"', cmd.name )
 	end
