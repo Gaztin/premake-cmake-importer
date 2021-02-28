@@ -61,8 +61,9 @@ function m.parseScript( filePath )
 	local scope = m.scope.current()
 
 	scope.variables[ 'PROJECT_SOURCE_DIR' ]        = path.getdirectory( filePath )
-	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
+	scope.variables[ 'CMAKE_CURRENT_LIST_FILE' ]   = filePath
 	scope.variables[ 'CMAKE_CURRENT_LIST_DIR' ]    = path.getdirectory( filePath )
+	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
 
 	-- Execute commands in order
 
@@ -71,20 +72,24 @@ function m.parseScript( filePath )
 	condscope.tests  = { true }
 
 	for _,cmd in ipairs( commandList ) do
-		local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
+		if( m.functions.recording ) then
+			m.functions.record( cmd )
+		else
+			local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
 
-		-- Skip commands if last test failed
-		if( lastTest or cmd.name == 'if' or cmd.name == 'elseif' or cmd.name == 'else' or cmd.name == 'endif' ) then
-			-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
-			local condscope__refwrap = { ptr = condscope }
+			-- Skip commands if last test failed
+			if( lastTest or cmd.name == 'if' or cmd.name == 'elseif' or cmd.name == 'else' or cmd.name == 'endif' ) then
+				-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
+				local condscope__refwrap = { ptr = condscope }
 
-			if( not m.executeCommand( cmd, condscope__refwrap ) ) then
-				-- Warn about unhandled command
-				p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
+				if( not m.executeCommand( cmd, condscope__refwrap ) ) then
+					-- Warn about unhandled command
+					p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
+				end
+
+				-- Patch possibly new pointer
+				condscope = condscope__refwrap.ptr
 			end
-
-			-- Patch possibly new pointer
-			condscope = condscope__refwrap.ptr
 		end
 	end
 

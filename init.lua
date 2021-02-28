@@ -8,6 +8,7 @@ m.cache_entries_allowed = { }
 require 'cmake_commands'
 require 'cmake_conditions'
 require 'cmake_fields'
+require 'cmake_functions'
 require 'cmake_modules_cache'
 require 'cmake_scope'
 require 'cmake_script'
