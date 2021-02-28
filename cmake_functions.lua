@@ -36,8 +36,8 @@ function m.functions.record( cmd )
 	end
 end
 
-function m.functions.invoke( name, ... )
-	local entry = findEntry( name )
+function m.functions.invoke( cmd )
+	local entry = findEntry( cmd.name )
 	if( entry == nil ) then
 		p.error( 'Cannot invoke function "%s". Function entry missing!', name )
 	end
@@ -46,17 +46,17 @@ function m.functions.invoke( name, ... )
 	condscope.parent = nil
 	condscope.tests  = { true }
 
-	for i,cmd in ipairs( entry.commands ) do
+	for i,command in ipairs( entry.commands ) do
 		local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
 
 		-- Skip commands if last test failed
-		if( lastTest or cmd.name == 'if' or cmd.name == 'elseif' or cmd.name == 'else' or cmd.name == 'endif' ) then
+		if( lastTest or command.name == 'if' or command.name == 'elseif' or command.name == 'else' or command.name == 'endif' ) then
 			-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
 			local condscope__refwrap = { ptr = condscope }
 
-			if( not m.executeCommand( cmd, condscope__refwrap ) ) then
+			if( not m.executeCommand( command, condscope__refwrap ) ) then
 				-- Warn about unhandled command
-				p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
+				p.warn( 'Unhandled command: "%s" with arguments: [%s]', command.name, table.concat( command.arguments, ', ' ) )
 			end
 
 			-- Patch possibly new pointer
