@@ -402,7 +402,9 @@ function m.commands.find_package( cmd )
 			}
 
 			-- Load module script
+			m.scope.push()
 			m.parseScript( filePath )
+			m.scope.pop()
 
 			m.currentPackage = prevPackage
 		end
