@@ -47,20 +47,24 @@ function m.functions.invoke( cmd )
 	condscope.tests  = { true }
 
 	for i,command in ipairs( entry.commands ) do
-		local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
+		if( m.groups.recording ) then
+			m.groups.record( cmd )
+		else
+			local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
 
-		-- Skip commands if last test failed
-		if( lastTest or command.name == 'if' or command.name == 'elseif' or command.name == 'else' or command.name == 'endif' ) then
-			-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
-			local condscope__refwrap = { ptr = condscope }
+			-- Skip commands if last test failed
+			if( lastTest or command.name == 'if' or command.name == 'elseif' or command.name == 'else' or command.name == 'endif' ) then
+				-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
+				local condscope__refwrap = { ptr = condscope }
 
-			if( not m.executeCommand( command, condscope__refwrap ) ) then
-				-- Warn about unhandled command
-				p.warn( 'Unhandled command: "%s" with arguments: [%s]', command.name, table.concat( command.arguments, ', ' ) )
+				if( not m.executeCommand( command, condscope__refwrap ) ) then
+					-- Warn about unhandled command
+					p.warn( 'Unhandled command: "%s" with arguments: [%s]', command.name, table.concat( command.arguments, ', ' ) )
+				end
+
+				-- Patch possibly new pointer
+				condscope = condscope__refwrap.ptr
 			end
-
-			-- Patch possibly new pointer
-			condscope = condscope__refwrap.ptr
 		end
 	end
 end

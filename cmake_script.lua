@@ -74,6 +74,8 @@ function m.parseScript( filePath )
 	for _,cmd in ipairs( commandList ) do
 		if( m.functions.recording ) then
 			m.functions.record( cmd )
+		elseif( m.groups.recording ) then
+			m.groups.record( cmd )
 		else
 			local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
 
