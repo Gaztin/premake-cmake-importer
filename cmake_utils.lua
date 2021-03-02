@@ -165,19 +165,3 @@ function m.findMatchingParentheses( str, index )
 
 	return nil
 end
-
-function m.trimTrailingComments( str )
-	-- Ignore block comments
-	local comment = str:sub( 1, #str )
-	if( comment:find( '#%[(=*)%[' ) or comment:find( '#%](=*)%]' ) ) then
-		return str
-	end
-
-	-- Find uncaptured comment symbol	
-	local index = m.findUncaptured( str, "#" )
-	if( index == nil ) then
-		return str
-	end
-
-	return str:sub( 1, index - 1 )
-end

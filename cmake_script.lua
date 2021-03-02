@@ -14,30 +14,18 @@ function m.parseScript( filePath )
 	end
 
 	local file = io.open( filePath, 'r' )
-
 	if( file == nil ) then
 		p.error( 'Failed to open "%s"', filePath )
 		return
 	end
 
-	local line    = file:read( '*l' )
-	local content = ''
-	while( line ) do
-		-- Trim leading whitespace
-		line = string.match( line, '^%s*(.*%S)' ) or ''
-
-		if( #line > 0 ) then
-			content = content .. m.trimTrailingComments( line ) .. ' '
-		end
-
-		line = file:read( '*l' )
-	end
+	local content = file:read( '*a' )
 
 	io.close( file )
 
 	-- Remove bracket comments
 	repeat
-		local st, en, cap = content:find( '#%[(=*)%[' )
+		local st,en,cap = content:find( '[^#]#%[(=*)%[' )
 		if( st ~= nil ) then
 			-- Find matching end brackets with the same amount of '=' characters between the brackets (']]')
 			local closingBrackets = ']' .. cap .. ']'
@@ -51,6 +39,18 @@ function m.parseScript( filePath )
 			content = content:sub( 1, st - 1 ) .. content:sub( st2 + #closingBrackets )
 		end
 	until st == nil
+
+	-- Remove trailing comments
+	repeat
+		local index = m.findUncaptured( content, '#' )
+		if( index ~= nil ) then
+			local en = content:find( '\n', index + 1 )
+			content = content:sub( 1, index - 1 ) .. ( en and content:sub( en ) or '' )
+		end
+	until index == nil
+
+	-- Remove all control characters (mainly newlines)
+	content = content:gsub( '%c', ' ' )
 
 	local commandList  = m.deserializeCommandList( content )
 	local currentGroup = p.api.scope.group
