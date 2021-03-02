@@ -53,15 +53,12 @@ function m.expandConditions( str )
 
 		-- Determine what type the constant is
 		if( expr.op_type == m.OP_TYPE.CONSTANT ) then
-			
 			if( m.isStringLiteral( expr.value ) ) then
 				expr.const = m.resolveVariables( expr.value )
-
 			elseif( tonumber( expr.value ) ~= nil ) then
 				expr.const = tonumber( expr.value )
-
 			else
-				expr.const = m.expandVariable( expr.value )
+				expr.const = m.resolveVariables( expr.value )
 			end
 		end
 
