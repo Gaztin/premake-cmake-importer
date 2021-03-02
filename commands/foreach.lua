@@ -12,7 +12,7 @@ local function endfunc( commands, data )
 			parent = nil,
 			tests  = { true },
 		}
-		
+
 		for _,command in ipairs( commands ) do
 
 			if( m.groups.recording ) then
@@ -36,22 +36,41 @@ local function endfunc( commands, data )
 	scope.variables[ data.loopVar ] = restore
 end
 
-function m.commands.foreach( cmd )
-	if( #cmd.arguments == 2 ) then
-		local data = {
-			loopVar = cmd.arguments[ 1 ],
-			items   = string.explode( m.resolveVariables( cmd.arguments[ 2 ] ), ';' ),
-		}
+local function foreachBasic( cmd )
+	return {
+		loopVar = cmd.arguments[ 1 ],
+		items   = string.explode( m.resolveVariables( cmd.arguments[ 2 ] ), ';' ),
+	}
+end
 
-		m.groups.push( endfunc, 'endforeach', data )
-	else
-		local data = {
-			loopVar = cmd.arguments[ 1 ],
-			items   = { },
-		}
-
-		p.warn( 'Only simple foreach loops are fully supported' )
-
-		m.groups.push( endfunc, 'endforeach', data )
+local function foreachRange( cmd )
+	local start = #cmd.arguments > 3 and tonumber( m.resolveVariables( cmd.arguments[ 3 ] ) ) or 0
+	local stop  = tonumber( m.resolveVariables( cmd.arguments[ #cmd.arguments > 3 and 4 or 3 ] ) )
+	local step  = #cmd.arguments > 4 and tonumber( m.resolveVariables( cmd.arguments[ 5 ] ) ) or 1
+	if( stop == nil ) then
+		p.error( 'Stopping point for range-variant foreach was not a number (%s)', stop )
 	end
+
+	local items = { }
+	for i=start,stop,step do
+		table.insert( items, i )
+	end
+
+	return {
+		loopVar = cmd.arguments[ 1 ],
+		items   = items,
+	}
+end
+
+function m.commands.foreach( cmd )
+	local data
+	if( #cmd.arguments == 2 ) then
+		data = foreachBasic( cmd )
+	elseif( #cmd.arguments >= 3 and cmd.arguments[ 2 ] == 'RANGE' ) then
+		data = foreachRange( cmd )
+	else
+		p.error( 'This type of foreach loop is not supported' )
+	end
+
+	m.groups.push( endfunc, 'endforeach', data )
 end
