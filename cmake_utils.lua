@@ -36,10 +36,10 @@ function m.resolveVariables( str )
 
 	-- Global variables
 	repeat
-		st, en = string.find( str, '${%S+}' )
+		local st, en = string.find( str, '${%S+}' )
 
 		if( st ~= nil ) then
-			local var   = string.sub( str, st + 2, en - 1 )
+			local var   = m.resolveVariables( string.sub( str, st + 2, en - 1 ) )
 			local value = scope.variables[ var ]
 
 			if( value ~= nil ) then
@@ -53,10 +53,10 @@ function m.resolveVariables( str )
 
 	-- Environment variables
 	repeat
-		st, en = string.find( str, '$ENV{%S+}' )
+		local st, en = string.find( str, '$ENV{%S+}' )
 
 		if( st ~= nil ) then
-			local var   = string.sub( str, st + 5, en - 1 )
+			local var   = m.resolveVariables( string.sub( str, st + 5, en - 1 ) )
 			local value = os.getenv( var )
 
 			if( value ~= nil ) then
@@ -70,10 +70,10 @@ function m.resolveVariables( str )
 
 	-- Cache variables
 	repeat
-		st, en = string.find( str, '$CACHE{%S+}' )
+		local st, en = string.find( str, '$CACHE{%S+}' )
 
 		if( st ~= nil ) then
-			local var   = string.sub( str, st + 5, en - 1 )
+			local var   = m.resolveVariables( string.sub( str, st + 5, en - 1 ) )
 			local value = m.cache_entries[ var ]
 
 			if( value ~= nil ) then

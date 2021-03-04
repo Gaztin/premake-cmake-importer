@@ -7,12 +7,23 @@ function m.executeCommand( cmd )
 	if( m.groups.recording ) then
 		m.groups.record( cmd )
 	else
-		local command = m.commands[ cmd.name:lower() ]
-		if( command ~= nil ) then
+		local callback = m.commands[ cmd.name:lower() ]
+		if( callback ~= nil ) then
+			cmd = table.deepcopy( cmd )
+
+			-- Resolve variables and remove quotation marks before invoking command
+			for i=1,#cmd.arguments do
+				cmd.arguments[ i ] = m.resolveVariables( cmd.arguments[ i ] )
+
+				if( m.isStringLiteral( cmd.arguments[ i ] ) ) then
+					cmd.arguments[ i ] = string.sub( cmd.arguments[ i ], 2, string.len( cmd.arguments[ i ] ) - 1 )
+				end
+			end
+
 			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, table.concat( cmd.arguments, ' ' ) )
 
 			indent = indent + 1
-			command( cmd )
+			callback( cmd )
 			indent = indent - 1
 
 			return true
