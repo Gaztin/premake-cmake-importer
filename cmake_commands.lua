@@ -6,7 +6,7 @@ function m.executeCommand( cmd )
 	if( m.groups.recording ) then
 		m.groups.record( cmd )
 	else
-		local command = m.commands[ cmd.name ]
+		local command = m.commands[ cmd.name:lower() ]
 		if( command ~= nil ) then
 			command( cmd )
 			return true

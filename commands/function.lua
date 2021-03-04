@@ -2,7 +2,7 @@ local p = premake
 local m = p.extensions.impcmake
 
 local function endfunction( commands, data )
-	m.commands[ data.name ] = function( cmd )
+	m.commands[ data.name:lower() ] = function( cmd )
 		local scope = m.scope.push()
 
 		scope.variables[ 'CMAKE_CURRENT_FUNCTION' ]           = cmd.name
