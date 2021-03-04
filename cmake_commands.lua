@@ -9,9 +9,8 @@ function m.executeCommand( cmd )
 	else
 		local callback = m.commands[ cmd.name:lower() ]
 		if( callback ~= nil ) then
-			cmd = table.deepcopy( cmd )
-
 			-- Resolve variables and remove quotation marks before invoking command
+			cmd = table.deepcopy( cmd )
 			for i=1,#cmd.arguments do
 				cmd.arguments[ i ] = m.resolveVariables( cmd.arguments[ i ] )
 
@@ -20,7 +19,7 @@ function m.executeCommand( cmd )
 				end
 			end
 
-			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, table.concat( cmd.arguments, ' ' ) )
+			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, table.implode( cmd.arguments, '\'', '\'', ', ' ) )
 
 			indent = indent + 1
 			callback( cmd )
