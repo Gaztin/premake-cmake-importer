@@ -1,49 +1,34 @@
 local p = premake
 local m = p.extensions.impcmake
 
-m.commands[ 'if' ] = function( cmd, condscope__refwrap )
-	if( cmd.name == 'if' ) then
-		local newscope         = { }
-		newscope.parent        = condscope__refwrap.ptr
-		newscope.tests         = { }
-		condscope__refwrap.ptr = newscope
-
-		if( ( #condscope__refwrap.ptr.parent.tests > 0 ) and ( condscope__refwrap.ptr.parent.tests[ #condscope__refwrap.ptr.parent.tests ] ) ) then
-			table.insert( condscope__refwrap.ptr.tests, true )
-		else
-			return
+local function endif( commands, data )
+	local i = 1
+	repeat
+		if( not m.groups.recording ) then
+			if( commands[ i ].name == 'elseif' ) then
+				data.handled   = data.handled or data.lastCheck
+				data.lastCheck = m.conditions.evalExpression( table.concat( commands[ i ].arguments, ' ' ) )
+				i              = i + 1
+			elseif( commands[ i ].name == 'else' ) then
+				data.handled   = data.handled or data.lastCheck
+				data.lastCheck = not data.lastCheck
+				i              = i + 1
+			end
 		end
 
-	elseif( cmd.name == 'elseif' ) then
-		if( #condscope__refwrap.ptr.tests == 0 ) then
-			return
+		if( data.lastCheck and not data.handled ) then
+			m.executeCommand( commands[ i ] )
 		end
-
-		-- Look at all tests except the first one, which is always true
-		local tests = table.pack( select( 2, table.unpack( condscope__refwrap.ptr.tests ) ) )
-
-		if( table.contains( tests, true ) ) then
-			table.insert( condscope__refwrap.ptr.tests, false )
-			return
-		end
-	end
-
-	local test = m.expandConditions( cmd.argString )
-
-	table.insert( condscope__refwrap.ptr.tests, test )
+		
+		i = i + 1
+	until( i > #commands )
 end
 
-m.commands[ 'elseif' ] = m.commands[ 'if' ]
+m.commands[ 'if' ] = function( cmd )
+	local data = {
+		lastCheck = m.conditions.evalExpression( table.concat( cmd.arguments, ' ' ) ),
+		handled   = false,
+	}
 
-m.commands[ 'else' ] = function( cmd, condscope__refwrap )
-	if( #condscope__refwrap.ptr.tests > 0 ) then
-		-- Look at all tests except the first one, which is always true
-		local tests = table.pack( select( 2, table.unpack( condscope__refwrap.ptr.tests ) ) )
-
-		table.insert( condscope__refwrap.ptr.tests, not table.contains( tests, true ) )
-	end
-end
-
-m.commands[ 'endif' ] = function( cmd, condscope__refwrap )
-	condscope__refwrap.ptr = condscope__refwrap.ptr.parent
+	m.groups.push( 'if', 'endif', endif, data )
 end

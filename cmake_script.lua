@@ -67,32 +67,8 @@ function m.parseScript( filePath )
 
 	-- Execute commands in order
 
-	local condscope  = { }
-	condscope.parent = nil
-	condscope.tests  = { true }
-
 	for _,cmd in ipairs( commandList ) do
-		if( m.functions.recording ) then
-			m.functions.record( cmd )
-		elseif( m.groups.recording ) then
-			m.groups.record( cmd )
-		else
-			local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
-
-			-- Skip commands if last test failed
-			if( lastTest or cmd.name == 'if' or cmd.name == 'elseif' or cmd.name == 'else' or cmd.name == 'endif' ) then
-				-- Create pointer wrapper so that @m.executeCommand may modify our original @condscope variable
-				local condscope__refwrap = { ptr = condscope }
-
-				if( not m.executeCommand( cmd, condscope__refwrap ) ) then
-					-- Warn about unhandled command
-					p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.implode( cmd.arguments, '', '', ', ' ) )
-				end
-
-				-- Patch possibly new pointer
-				condscope = condscope__refwrap.ptr
-			end
-		end
+		m.executeCommand( cmd )
 	end
 
 	-- TODO: Validate allowed cache entries against allowed cache entries

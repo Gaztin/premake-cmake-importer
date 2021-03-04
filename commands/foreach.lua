@@ -1,34 +1,18 @@
 local p = premake
 local m = p.extensions.impcmake
 
-local function endfunc( commands, data )
+local function endforeach( commands, data )
 	local scope   = m.scope.current()
 	local restore = scope.variables[ data.loopVar ]
 
 	for _,item in ipairs( data.items ) do
 		scope.variables[ data.loopVar ] = item
 
-		local condscope = {
-			parent = nil,
-			tests  = { true },
-		}
-
 		for _,command in ipairs( commands ) do
-
 			if( m.groups.recording ) then
 				m.groups.record( command )
 			else
-				local lastTest = iif( #condscope.tests > 0, condscope.tests[ #condscope.tests ], false )
-
-				if( lastTest or command.name == 'if' or command.name == 'elseif' or command.name == 'else' or command.name == 'endif' ) then
-					local condscope__refwrap = { ptr = condscope }
-
-					if( not m.executeCommand( command, condscope__refwrap ) ) then
-						p.warn( 'Unhandled command: "%s" with arguments: [%s]', command.name, table.concat( command.arguments, ', ' ) )
-					end
-
-					condscope = condscope__refwrap.ptr
-				end
+				m.executeCommand( command )
 			end
 		end
 	end
@@ -72,5 +56,5 @@ function m.commands.foreach( cmd )
 		p.error( 'This type of foreach loop is not supported' )
 	end
 
-	m.groups.push( endfunc, 'endforeach', data )
+	m.groups.push( 'foreach', 'endforeach', endforeach, data )
 end

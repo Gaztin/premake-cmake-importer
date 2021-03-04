@@ -2,14 +2,20 @@ local p    = premake
 local m    = p.extensions.impcmake
 m.commands = { }
 
-function m.executeCommand( cmd, condscope__refwrap )
-	local command = m.commands[ cmd.name ]
-	if( command ~= nil ) then
-		command( cmd, condscope__refwrap )
-		return true
+function m.executeCommand( cmd )
+	if( m.groups.recording ) then
+		m.groups.record( cmd )
 	else
-		return false
+		local command = m.commands[ cmd.name ]
+		if( command ~= nil ) then
+			command( cmd )
+			return true
+		else
+			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.concat( cmd.arguments, ', ' ) )
+			return false
+		end
 	end
+
 end
 
 function m.resolveAlias( name )

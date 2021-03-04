@@ -1,12 +1,13 @@
-local p = premake
-local m = p.extensions.impcmake
+local p      = premake
+local m      = p.extensions.impcmake
+m.conditions = { }
 
-function m.expandConditions( str )
+function m.conditions.evalExpression( str )
 	-- Recursively expand conditions within this condition. Resolves parentheses wthin parentheses.
 	local leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
 	while( leftParenthesis ~= nil ) do
 		local capturedConditions          = string.sub( str, leftParenthesis + 1, rightParenthesis - 1 )
-		local capturedExpansion           = m.expandConditions( capturedConditions )
+		local capturedExpansion           = m.conditions.evalExpression( capturedConditions )
 		str                               = string.sub( str, 1, leftParenthesis - 1 ) .. iif( capturedExpansion, m.TRUE, m.FALSE ) .. string.sub( str, rightParenthesis + 1 )
 		leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
 	end
@@ -54,11 +55,9 @@ function m.expandConditions( str )
 		-- Determine what type the constant is
 		if( expr.op_type == m.OP_TYPE.CONSTANT ) then
 			if( m.isStringLiteral( expr.value ) ) then
-				expr.const = m.resolveVariables( expr.value )
-			elseif( tonumber( expr.value ) ~= nil ) then
-				expr.const = tonumber( expr.value )
+				expr.value = m.resolveVariables( expr.value )
 			else
-				expr.const = m.resolveVariables( expr.value )
+				expr.value = tonumber( expr.value ) or m.expandVariable( expr.value )
 			end
 		end
 
@@ -77,24 +76,23 @@ function m.expandConditions( str )
 			local constexpr = expressions[ i ]
 			local newExpr   = {
 				op_type = m.OP_TYPE.CONSTANT,
-				value   = ( which_op .. ' ' .. constexpr.value ),
-				const   = nil
+				value   = nil,
 			}
 
 			if( which_op == 'EXISTS' ) then
 
 				-- TODO: Implement EXISTS
-				newExpr.const = false
+				newExpr.value = false
 
 			elseif( which_op == 'COMMAND' ) then
 
 				-- TODO: Implement COMMAND
-				newExpr.const = false
+				newExpr.value = false
 
 			elseif( which_op == 'DEFINED' ) then
 
 				-- DEFINED yields true as long as the constant is not nil or NOTFOUND
-				newExpr.const = ( ( constexpr.const ~= nil ) and ( constexpr.const ~= m.NOTFOUND ) )
+				newExpr.value = ( ( constexpr.value ~= nil ) and ( constexpr.value ~= m.NOTFOUND ) )
 
 			end
 
@@ -119,30 +117,29 @@ function m.expandConditions( str )
 			local rhs     = expressions[ i + 1 ]
 			local newexpr = {
 				op_type = m.OP_TYPE.CONSTANT,
-				value   = string.format( '(%s %s %s)', lhs.value, which_op, rhs.value ),
-				const   = nil
+				value   = nil,
 			}
 
+			    if( which_op == 'EQUAL'                 ) then newexpr.value = ( lhs.value == rhs.value )
+			elseif( which_op == 'LESS'                  ) then newexpr.value = ( lhs.value <  rhs.value )
+			elseif( which_op == 'LESS_EQUAL'            ) then newexpr.value = ( lhs.value <= rhs.value )
+			elseif( which_op == 'GREATER'               ) then newexpr.value = ( lhs.value >  rhs.value )
+			elseif( which_op == 'GREATER_EQUAL'         ) then newexpr.value = ( lhs.value >= rhs.value )
 			-- TODO: Properly implement these binary operators
-			    if( which_op == 'EQUAL'                 ) then newexpr.const = ( lhs.const == rhs.const )
-			elseif( which_op == 'LESS'                  ) then newexpr.const = ( lhs.const <  rhs.const )
-			elseif( which_op == 'LESS_EQUAL'            ) then newexpr.const = ( lhs.const <= rhs.const )
-			elseif( which_op == 'GREATER'               ) then newexpr.const = ( lhs.const >  rhs.const )
-			elseif( which_op == 'GREATER_EQUAL'         ) then newexpr.const = ( lhs.const >= rhs.const )
-			elseif( which_op == 'STREQUAL'              ) then newexpr.const = ( lhs.const == rhs.const )
-			elseif( which_op == 'STRLESS'               ) then newexpr.const = ( lhs.const <  rhs.const )
-			elseif( which_op == 'STRLESS_EQUAL'         ) then newexpr.const = ( lhs.const <= rhs.const )
-			elseif( which_op == 'STRGREATER'            ) then newexpr.const = ( lhs.const >  rhs.const )
-			elseif( which_op == 'STRGREATER_EQUAL'      ) then newexpr.const = ( lhs.const >= rhs.const )
-			elseif( which_op == 'VERSION_EQUAL'         ) then newexpr.const = ( lhs.const == rhs.const )
-			elseif( which_op == 'VERSION_LESS'          ) then newexpr.const = ( lhs.const <  rhs.const )
-			elseif( which_op == 'VERSION_LESS_EQUAL'    ) then newexpr.const = ( lhs.const <= rhs.const )
-			elseif( which_op == 'VERSION_GREATER'       ) then newexpr.const = ( lhs.const >  rhs.const )
-			elseif( which_op == 'VERSION_GREATER_EQUAL' ) then newexpr.const = ( lhs.const >= rhs.const )
-			elseif( which_op == 'MATCHES'               ) then newexpr.const = ( lhs.const == rhs.const )
+			elseif( which_op == 'STREQUAL'              ) then newexpr.value = ( lhs.value == rhs.value )
+			elseif( which_op == 'STRLESS'               ) then newexpr.value = ( lhs.value <  rhs.value )
+			elseif( which_op == 'STRLESS_EQUAL'         ) then newexpr.value = ( lhs.value <= rhs.value )
+			elseif( which_op == 'STRGREATER'            ) then newexpr.value = ( lhs.value >  rhs.value )
+			elseif( which_op == 'STRGREATER_EQUAL'      ) then newexpr.value = ( lhs.value >= rhs.value )
+			elseif( which_op == 'VERSION_EQUAL'         ) then newexpr.value = ( lhs.value == rhs.value )
+			elseif( which_op == 'VERSION_LESS'          ) then newexpr.value = ( lhs.value <  rhs.value )
+			elseif( which_op == 'VERSION_LESS_EQUAL'    ) then newexpr.value = ( lhs.value <= rhs.value )
+			elseif( which_op == 'VERSION_GREATER'       ) then newexpr.value = ( lhs.value >  rhs.value )
+			elseif( which_op == 'VERSION_GREATER_EQUAL' ) then newexpr.value = ( lhs.value >= rhs.value )
+			elseif( which_op == 'MATCHES'               ) then newexpr.value = ( lhs.value == rhs.value )
 			end
 
-			if( newexpr.const == nil ) then
+			if( newexpr.value == nil ) then
 				p.error( 'Unable to solve test due to unhandled binary operator "%s"', which_op )
 			end
 
@@ -166,8 +163,7 @@ function m.expandConditions( str )
 			local constexpr = expressions[ i ]
 			local newexpr   = {
 				op_type = m.OP_TYPE.CONSTANT,
-				value   = string.format( '(NOT %s)', constexpr.value ),
-				const   = ( not m.isTrue( constexpr.const ) )
+				value   = ( not m.isTrue( constexpr.value ) ),
 			}
 
 			-- Replace both the NOT and the constant expressions with a combined evaluation
@@ -190,8 +186,7 @@ function m.expandConditions( str )
 			local rhs     = expressions[ i + 1 ]
 			local newexpr = {
 				op_type = m.OP_TYPE.CONSTANT,
-				value   = string.format( '(%s AND %s)', lhs.value, rhs.value ),
-				const   = ( lhs.const and rhs.const )
+				value   = ( lhs.value and rhs.value ),
 			}
 
 			-- Replace both arguments and the operator with a combined evaluation
@@ -215,8 +210,7 @@ function m.expandConditions( str )
 			local rhs     = expressions[ i + 1 ]
 			local newexpr = {
 				op_type = m.OP_TYPE.CONSTANT,
-				value   = string.format( '(%s OR %s)', lhs.value, rhs.value ),
-				const   = ( lhs.const or rhs.const )
+				value   = ( lhs.value or rhs.value ),
 			}
 
 			-- Replace both arguments and the operator with a combined evaluation
@@ -230,7 +224,7 @@ function m.expandConditions( str )
 
 	local test = true
 	for _,expr in ipairs( expressions ) do
-		test = test and m.isTrue( expr.const )
+		test = test and m.isTrue( expr.value )
 	end
 
 	return test
