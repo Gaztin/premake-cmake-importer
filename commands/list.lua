@@ -4,7 +4,7 @@ local subcommands = { }
 
 -- TODO: LENGTH
 
-function subcommands.get( list, ... )
+function subcommands.GET( list, ... )
 	local scope      = m.scope.current()
 	local argc       = select( '#', ... )
 	local indexCount = argc - 1
@@ -24,7 +24,7 @@ end
 -- TODO: JOIN
 -- TODO: SUBLIST
 
-function subcommands.find( list, value, outVar )
+function subcommands.FIND( list, value, outVar )
 	local scope = m.scope.current()
 	value       = m.resolveVariables( value )
 
@@ -52,13 +52,11 @@ end
 -- TODO: SORT
 
 function m.commands.list( cmd )
-	local subcommandName = cmd.arguments[ 1 ]:lower()
+	local subcommandName = cmd.arguments[ 1 ]
 	local subcommand     = subcommands[ subcommandName ]
 	if( subcommand == nil ) then
 		p.error( 'List subcommand "%s" is not implemented!', subcommandName )
 	end
 
-	local list = cmd.arguments[ 2 ]:explode( ';' )
-
-	subcommand( list, table.unpack( cmd.arguments, 3 ) )
+	subcommand( table.unpack( cmd.arguments, 2 ) )
 end
