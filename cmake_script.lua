@@ -130,8 +130,8 @@ function m.deserializeCommandList( content )
 		}
 
 		-- Trim surrounding whitespace
-		command.name      = string.match( command.name,      '^%s*(.*%S)%s*' ) or command.name
-		command.argString = string.match( command.argString, '^%s*(.*%S)%s*' ) or command.argString
+		command.name      = string.match( command.name,      '%s*(.*%S)%s*' ) or command.name
+		command.argString = string.match( command.argString, '%s*(.*%S)%s*' ) or command.argString
 
 		local it = string.find( content, '%S', leftParenthesis + 1, false )
 
