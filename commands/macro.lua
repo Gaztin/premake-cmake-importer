@@ -14,31 +14,28 @@ local function specializeCommands( cmd, commands, params )
 	}
 
 	for i,param in ipairs( params ) do
-		replacements[ '${' .. param .. '}' ] = args[ i ]
+		replacements[ '${' .. param .. '}' ] = cmd.arguments[ i ]
 	end
 
 	for i,arg in ipairs( cmd.arguments ) do
 		replacements[ '${ARGV' .. i .. '}' ] = arg
 	end
 
-	for i=1,#commands do
-		for replacee,replacement in ipairs( replacements ) do
-			commands[ i ] = string.gsub( commands[ i ], replacee, replacement )
+	local newCommands = table.deepcopy( commands )
+	for _,command in ipairs( newCommands ) do
+		for i=1,#command.arguments do
+			for replacee,replacement in pairs( replacements ) do
+				command.arguments[ i ] = string.gsub( command.arguments[ i ], replacee, replacement )
+			end
 		end
 	end
 
-	return commands
+	return newCommands
 end
 
 local function endmacro( commands, data )
-	m.commands[ data.name ] = function( cmd )
+	m.commands[ data.name:lower() ] = function( cmd )
 		local specializedCommands = specializeCommands( cmd, commands, data.parameters )
-
-		-- TODO: Remove after making sure this works
-		print( '[MACRO]:' )
-		for i=1,#commands do
-			print( '\t' .. commands[ i ] .. '  -->  ' .. specializedCommands[ i ] )
-		end
 
 		for i,command in ipairs( specializedCommands ) do
 			m.executeCommand( command )
