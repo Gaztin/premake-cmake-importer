@@ -1,6 +1,7 @@
-local p    = premake
-local m    = p.extensions.impcmake
-m.commands = { }
+local p      = premake
+local m      = p.extensions.impcmake
+local indent = 0
+m.commands   = { }
 
 function m.executeCommand( cmd )
 	if( m.groups.recording ) then
@@ -8,7 +9,12 @@ function m.executeCommand( cmd )
 	else
 		local command = m.commands[ cmd.name:lower() ]
 		if( command ~= nil ) then
+			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, table.concat( cmd.arguments, ' ' ) )
+
+			indent = indent + 1
 			command( cmd )
+			indent = indent - 1
+
 			return true
 		else
 			p.warn( 'Unhandled command: "%s" with arguments: [%s]', cmd.name, table.concat( cmd.arguments, ', ' ) )
