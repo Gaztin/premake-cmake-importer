@@ -89,8 +89,27 @@ function m.resolveVariables( str )
 end
 
 function m.expandVariable( var, defaultValue )
+	local cacheVar = string.match( var, 'CACHE{(.+)}' )
+	if( cacheVar ) then
+		return m.cache_entries[ cacheVar ]
+	end
+
+	local envVar = string.match( var, 'ENV{(.+)}' )
+	if( envVar ) then
+		return os.getenv( envVar )
+	end
+
 	local scope = m.scope.current()
-	return scope.variables[ var ] or defaultValue or m.NOTFOUND
+	while( scope ~= nil ) do
+		local scopeVar = scope.variables[ var ]
+		if( scopeVar ~= nil ) then
+			return scopeVar
+		end
+
+		scope = scope.parent
+	end
+
+	return defaultValue or m.NOTFOUND
 end
 
 function m.isStringLiteral( str )
