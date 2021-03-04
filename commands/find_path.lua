@@ -483,9 +483,11 @@ function m.commands.find_package( cmd )
 
 				local verCount   = 0
 				local verNumbers = { }
-				for it in string.gmatch( version, '%d+' ) do
-					verCount               = verCount + 1
-					verNumbers[ verCount ] = it
+				if( version ~= nil ) then
+					for it in string.gmatch( version, '%d+' ) do
+						verCount               = verCount + 1
+						verNumbers[ verCount ] = it
+					end
 				end
 
 				-- Set up scope
