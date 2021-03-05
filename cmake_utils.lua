@@ -43,8 +43,7 @@ function m.resolveVariables( str )
 			local value = scope.variables[ var ]
 
 			if( value ~= nil ) then
-				local detokenizedValue = p.detoken.expand( value, scope.variables )
-				str = string.sub( str, 1, st - 1 ) .. detokenizedValue .. string.sub( str, en + 1 )
+				str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
 			else
 				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
 			end
@@ -60,8 +59,7 @@ function m.resolveVariables( str )
 			local value = os.getenv( var )
 
 			if( value ~= nil ) then
-				local detokenizedValue = p.detoken.expand( value, scope.variables )
-				str = string.sub( str, 1, st - 1 ) .. detokenizedValue .. string.sub( str, en + 1 )
+				str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
 			else
 				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
 			end
@@ -77,8 +75,7 @@ function m.resolveVariables( str )
 			local value = m.cache_entries[ var ]
 
 			if( value ~= nil ) then
-				local detokenizedValue = p.detoken.expand( value, m.cache_entries )
-				str = string.sub( str, 1, st - 1 ) .. detokenizedValue .. string.sub( str, en + 1 )
+				str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
 			else
 				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
 			end
