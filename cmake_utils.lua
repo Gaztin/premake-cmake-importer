@@ -32,21 +32,22 @@ function m.isTrue( value )
 end
 
 function m.resolveVariables( str )
-	local scope = m.scope.current()
-
 	-- Global variables
 	repeat
 		local st, en = string.find( str, '${%S+}' )
 
 		if( st ~= nil ) then
 			local var   = m.resolveVariables( string.sub( str, st + 2, en - 1 ) )
-			local value = scope.variables[ var ]
+			local scope = m.scope.current()
+			local value
 
-			if( value ~= nil ) then
-				str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
-			else
-				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
+			-- Find variable definition in parent scopes
+			while( value == nil and scope ~= nil ) do
+				value = scope.variables[ var ]
+				scope = scope.parent
 			end
+
+			str = string.sub( str, 1, st - 1 ) .. ( value or '' ) .. string.sub( str, en + 1 )
 		end
 	until( st == nil )
 
