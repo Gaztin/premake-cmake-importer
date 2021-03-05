@@ -57,13 +57,8 @@ function m.resolveVariables( str )
 
 		if( st ~= nil ) then
 			local var   = m.resolveVariables( string.sub( str, st + 5, en - 1 ) )
-			local value = os.getenv( var )
-
-			if( value ~= nil ) then
-				str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
-			else
-				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
-			end
+			local value = os.getenv( var ) or ''
+			str         = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
 		end
 	until( st == nil )
 
@@ -73,13 +68,9 @@ function m.resolveVariables( str )
 
 		if( st ~= nil ) then
 			local var   = m.resolveVariables( string.sub( str, st + 5, en - 1 ) )
-			local value = m.cache_entries[ var ]
+			local value = m.cache_entries[ var ] or ''
 
-			if( value ~= nil ) then
-				str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
-			else
-				str = string.sub( str, 1, st - 1 ) .. string.sub( str, en + 1 )
-			end
+			str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
 		end
 	until( st == nil )
 
