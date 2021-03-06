@@ -8,7 +8,7 @@ m.OP_TYPE.UNARY    = 0x1
 m.OP_TYPE.BINARY   = 0x2
 m.OP_TYPE.BOOL     = 0x4
 
-function m.parseScript( filePath )
+function m.loadScript( filePath )
 	if( os.isdir( filePath ) ) then
 		filePath = path.join( filePath, 'CMakeLists.txt' )
 	end

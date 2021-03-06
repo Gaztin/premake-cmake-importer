@@ -14,26 +14,43 @@ function m.commands.include( cmd )
 			required = false
 
 		elseif( arg == 'RESULT_VARIABLE' ) then
-			local var = table.remove( arguments, 1 )
-
-			resultVar = var
+			resultVar = table.remove( arguments, 1 )
 
 		elseif( arg == 'NO_POLICY_SCOPE' ) then
-			-- TODO: CMake Policies
+			p.warn( 'include: Ignoring NO_POLICY_SCOPE' )
 		end
 	end
 
-	if( os.isfile( file ) ) then
-		m.parseScript( file )
+	local filePaths = {
+		file,
+		table.unpack( string.explode( m.expandVariable( 'CMAKE_MODULE_PATH' ), ';' ) ),
+		path.join( m.modules.getCacheDir(), file ) .. '.cmake',
+	}
 
-		if( resultVar ) then
-			m.cache_entries[ resultVar ] = file
-		end
-	else
-		-- TODO: May be module, try to find <modulename>.cmake
+	-- If we are in the module directory, search there before in designated directory
+	local currentListDir      = m.expandVariable( 'CMAKE_CURRENT_LIST_DIR' )
+	local potentialMarkerPath = path.join( currentListDir, m.modules.getCacheMarkerPath() )
+	if( os.isfile( potentialMarkerPath ) ) then
+		local modulePath = table.remove( filePaths, #filePaths )
+		table.insert( filePaths, 2, modulePath )
+	end
 
-		if( required ) then
-			p.error( 'Failed to find the file "%s" for command "include"', file )
+	local scope = m.scope.current()
+	for i,filePath in ipairs( filePaths ) do
+		if( filePath ~= m.NOTFOUND and os.isfile( filePath ) ) then
+			m.loadScript( filePath )
+			
+			if( resultVar ) then
+				scope.variables[ resultVar ] = path.getabsolute( filePath )
+			end
+
+			return
 		end
+	end
+
+	if( required ) then
+		p.error( 'include: Failed to find file/module "%s"!', file )
+	elseif( resultVar ) then
+		scope.variables[ resultVar ] = m.NOTFOUND
 	end
 end

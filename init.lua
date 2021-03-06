@@ -8,7 +8,7 @@ m.cache_entries_allowed = { }
 require 'cmake_commands'
 require 'cmake_conditions'
 require 'cmake_groups'
-require 'cmake_modules_cache'
+require 'cmake_modules'
 require 'cmake_scope'
 require 'cmake_script'
 require 'cmake_utils'
@@ -35,6 +35,6 @@ m.NOTFOUND = 'NOTFOUND'
 
 function cmake_project( filePath )
 	m.scope.push()
-	m.parseScript( filePath )
+	m.loadScript( filePath )
 	m.scope.pop()
 end
