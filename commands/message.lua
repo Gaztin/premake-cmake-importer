@@ -10,7 +10,7 @@ function m.commands.message( cmd )
 
 	if( #arguments > 1 ) then
 		local mode = arguments[ 1 ]
-		local msg  = m.toRawString( arguments[ 2 ] )
+		local msg  = arguments[ 2 ]
 
 		if( mode == 'FATAL_ERROR' or mode == 'SEND_ERROR' ) then
 			term.pushColor( term.red )
@@ -29,7 +29,7 @@ function m.commands.message( cmd )
 		term.popColor()
 
 	else
-		local msg = m.toRawString( arguments[ 1 ] )
+		local msg = arguments[ 1 ]
 
 		printf( '[CMake]: %s', msg )
 	end

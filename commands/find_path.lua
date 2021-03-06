@@ -152,8 +152,6 @@ local function findPath( cmd, keyword, extension )
 		local prefixes            = string.explode( prefixPath, ';' )
 
 		for _,prefix in ipairs( prefixes ) do
-			prefix = m.toRawString( prefix )
-
 			local dir = path.join( prefix, keywordDirs[ keyword ] )
 
 			for _,name in ipairs( names ) do
@@ -184,8 +182,6 @@ local function findPath( cmd, keyword, extension )
 			local paths = string.explode( keyPath, ';' )
 
 			for _,pathh in ipairs( paths ) do
-				pathh = m.toRawString( pathh )
-
 				for _,name in ipairs( names ) do
 					local filePath = path.join( pathh, name )
 
@@ -204,8 +200,6 @@ local function findPath( cmd, keyword, extension )
 			local paths = string.explode( frameworkPath, ';' )
 
 			for _,pathh in ipairs( paths ) do
-				pathh = m.toRawString( pathh )
-
 				for _,name in ipairs( names ) do
 					local filePath = path.join( pathh, name )
 
@@ -226,8 +220,6 @@ local function findPath( cmd, keyword, extension )
 		local prefixes            = prefixPath and string.explode( prefixPath, separator ) or { }
 
 		for _,prefix in ipairs( prefixes ) do
-			prefix = m.toRawString( prefix )
-
 			local dir = path.join( prefix, keywordDirs[ keyword ] )
 
 			for _,name in ipairs( names ) do
@@ -258,8 +250,6 @@ local function findPath( cmd, keyword, extension )
 			local paths = string.explode( includePath, separator )
 
 			for _,pathh in ipairs( paths ) do
-				pathh = m.toRawString( pathh )
-
 				for _,name in ipairs( names ) do
 					local filePath = path.join( pathh, name )
 
@@ -278,8 +268,6 @@ local function findPath( cmd, keyword, extension )
 			local paths = string.explode( frameworkPath, separator )
 
 			for _,pathh in ipairs( paths ) do
-				pathh = m.toRawString( pathh )
-
 				for _,name in ipairs( names ) do
 					local filePath = path.join( pathh, name )
 
@@ -294,8 +282,6 @@ local function findPath( cmd, keyword, extension )
 	end
 
 	for _,hint in ipairs( hints ) do
-		hint = m.toRawString( hint )
-
 		for _,name in ipairs( names ) do
 			local filePath = path.join( hint, name )
 
@@ -311,8 +297,6 @@ local function findPath( cmd, keyword, extension )
 	-- TODO: 6. Search CMake variables in the Platform files
 
 	for _,pathh in ipairs( paths ) do
-		pathh = m.toRawString( pathh )
-
 		for _,name in ipairs( names ) do
 			local filePath = path.join( pathh, name )
 

@@ -3,7 +3,7 @@ local m = p.extensions.impcmake
 
 function m.commands.include( cmd )
 	local arguments = table.arraycopy( cmd.arguments )
-	local file      = m.toRawString( table.remove( arguments, 1 ) )
+	local file      = table.remove( arguments, 1 )
 	local required  = true
 	local resultVar = nil
 

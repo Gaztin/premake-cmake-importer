@@ -109,16 +109,6 @@ function m.toStringLiteral( str )
 	return m.isStringLiteral( str ) and str or ( '"' .. str .. '"' )
 end
 
-function m.toRawString( str )
-	str = m.resolveVariables( str )
-
-	if( m.isStringLiteral( str ) ) then
-		return str:gsub( '^"(.*)"', '%1' )
-	else
-		return str
-	end
-end
-
 function m.findUncaptured( str, delim, startIndex )
 	-- Finds a substring within a string, but ignores any delimeters inside quotation marks
 	-- Firstly, replace all occurrances of: \"
