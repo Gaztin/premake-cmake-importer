@@ -2,10 +2,15 @@ local p           = premake
 local m           = p.extensions.impcmake
 local subcommands = { }
 
+local function getList( listVar )
+	return string.explode( m.expandVariable( listVar ), ';' )
+end
+
 -- TODO: LENGTH
 
-function subcommands.GET( list, ... )
+function subcommands.GET( listVar, ... )
 	local scope      = m.scope.current()
+	local list       = getList( listVar )
 	local argc       = select( '#', ... )
 	local indexCount = argc - 1
 	local outVar     = select( argc, ... )
@@ -24,8 +29,9 @@ end
 -- TODO: JOIN
 -- TODO: SUBLIST
 
-function subcommands.FIND( list, value, outVar )
+function subcommands.FIND( listVar, value, outVar )
 	local scope = m.scope.current()
+	local list  = getList( listVar )
 	value       = m.resolveVariables( value )
 
 	for i,item in ipairs( list ) do
