@@ -44,7 +44,18 @@ function subcommands.FIND( listVar, value, outVar )
 	scope.variables[ outVar ] = -1
 end
 
--- TODO: APPEND
+function subcommands.APPEND( listVar, ... )
+	local scope = m.scope.current()
+	local list  = getList( listVar )
+
+	for i=1,select( '#', ... ) do
+		local item = select( i, ... )
+		table.insert( list, item )
+	end
+
+	scope.variables[ listVar ] = table.concat( list, ';' )
+end
+
 -- TODO: FILTER
 -- TODO: INSERT
 -- TODO: POP_BACK
