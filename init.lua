@@ -13,8 +13,8 @@ require 'cmake_scope'
 require 'cmake_script'
 require 'cmake_utils'
 
-m._VERSION               = '1.0.0'
-m._LASTEST_CMAKE_VERSION = '3.17.3'
+m._VERSION              = '1.0.0'
+m._LATEST_CMAKE_VERSION = '3.17.3'
 
 -- Variables that stay the same throughout the entire configuration, but are expensive to fetch
 
