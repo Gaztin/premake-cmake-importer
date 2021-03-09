@@ -21,7 +21,7 @@ function m.executeCommand( cmd )
 				end
 			end
 
-			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, table.implode( cmd.arguments, '\'', '\'', ', ' ) )
+			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, cmd.argString )
 
 			indent = indent + 1
 			callback( cmd )
