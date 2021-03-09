@@ -10,7 +10,9 @@ function m.executeCommand( cmd )
 		local callback = m.commands[ cmd.name:lower() ]
 		if( callback ~= nil ) then
 			-- Resolve variables and remove quotation marks before invoking command
-			cmd = table.deepcopy( cmd )
+			cmd           = table.deepcopy( cmd )
+			cmd.argString = m.resolveVariables( cmd.argString )
+
 			for i=1,#cmd.arguments do
 				cmd.arguments[ i ] = m.resolveVariables( cmd.arguments[ i ] )
 

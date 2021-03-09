@@ -13,7 +13,7 @@ local function endif( commands, data )
 		if( not data.handled ) then
 			if( nestLevel == 0 and command.name == 'elseif' ) then
 				data.handled   = data.handled or data.lastCheck
-				data.lastCheck = m.conditions.evalExpression( table.concat( command.arguments, ' ' ) )
+				data.lastCheck = m.conditions.evalExpression( command.argString )
 			elseif( nestLevel == 0 and command.name == 'else' ) then
 				data.handled   = data.handled or data.lastCheck
 				data.lastCheck = not data.lastCheck
@@ -28,7 +28,7 @@ end
 
 m.commands[ 'if' ] = function( cmd )
 	local data = {
-		lastCheck = m.conditions.evalExpression( table.concat( cmd.arguments, ' ' ) ),
+		lastCheck = m.conditions.evalExpression( cmd.argString ),
 		handled   = false,
 	}
 

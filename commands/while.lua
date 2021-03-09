@@ -11,7 +11,7 @@ end
 
 m.commands[ 'while' ] = function( cmd )
 	local data = {
-		expression = table.concat( cmd.arguments, ' ' ),
+		expression = cmd.argString,
 	}
 
 	m.groups.push( 'while', 'endwhile', endwhile, data )
