@@ -5,7 +5,7 @@ m.conditions = { }
 function m.conditions.evalExpression( str )
 	-- Recursively expand conditions within this condition. Resolves parentheses wthin parentheses.
 	local leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
-	while( leftParenthesis ~= nil ) do
+	while( leftParenthesis ) do
 		local capturedConditions          = string.sub( str, leftParenthesis + 1, rightParenthesis - 1 )
 		local capturedExpansion           = m.conditions.evalExpression( capturedConditions )
 		str                               = string.sub( str, 1, leftParenthesis - 1 ) .. iif( capturedExpansion, m.TRUE, m.FALSE ) .. string.sub( str, rightParenthesis + 1 )

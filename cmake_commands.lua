@@ -8,7 +8,7 @@ function m.executeCommand( cmd )
 		m.groups.record( cmd )
 	else
 		local callback = m.commands[ cmd.name:lower() ]
-		if( callback ~= nil ) then
+		if( callback ) then
 			-- Resolve variables and remove quotation marks before invoking command
 			cmd           = table.deepcopy( cmd )
 			cmd.argString = m.resolveVariables( cmd.argString )
