@@ -458,7 +458,7 @@ function m.commands.find_package( cmd )
 
 	if( not configMode ) then
 		local fileName = string.format( 'Find%s.cmake', packageName )
-		local filePath = path.join( m.CMAKE_MODULES_CACHE, fileName )
+		local filePath = path.join( m.modules.getCacheDir(), fileName )
 
 		if( os.isfile( filePath ) ) then
 			local prevPackage = m.currentPackage
