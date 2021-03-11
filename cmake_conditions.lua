@@ -58,7 +58,7 @@ function m.conditions.evalExpression( str )
 				expr.value = m.resolveVariables( expr.value )
 				expr.value = string.sub( expr.value, 2, #expr.value - 1 )
 			else
-				expr.value = tonumber( expr.value ) or m.expandVariable( expr.value )
+				expr.value = tonumber( expr.value ) or m.resolveVariables( expr.value )
 			end
 		end
 
