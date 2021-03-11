@@ -89,7 +89,7 @@ function m.conditions.evalExpression( str )
 				newExpr.value = false
 
 			elseif( which_op == 'DEFINED' ) then
-				local defined = m.expandVariable( constexpr.value )
+				local defined = constexpr.value and m.expandVariable( constexpr.value ) or m.NOTFOUND
 				newExpr.value = defined ~= m.NOTFOUND
 			end
 
