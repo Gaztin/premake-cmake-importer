@@ -2,22 +2,41 @@ local p = premake
 local m = p.extensions.impcmake
 
 local function endforeach( commands, data )
-	local scope   = m.scope.current()
-	local restore = scope.variables[ data.loopVar ]
+	local scope          = m.scope.current()
+	local prevLoopVar    = scope.variables[ data.loopVar ]
+	local prevContinue   = m.commands[ 'continue' ]
+	local prevBreak      = m.commands[ 'break' ]
+	local shouldContinue = false
+	local shouldBreak    = false
+
+	m.commands[ 'continue' ] = function( cmd )
+		shouldContinue = true
+	end
+
+	m.commands[ 'break' ] = function( cmd )
+		shouldBreak = true
+	end
 
 	for _,item in ipairs( data.items ) do
 		scope.variables[ data.loopVar ] = item
-
+		
 		for _,command in ipairs( commands ) do
-			if( m.groups.recording ) then
-				m.groups.record( command )
-			else
-				m.executeCommand( command )
+			m.executeCommand( command )
+
+			if( shouldContinue ) then
+				shouldContinue = false
+				break
 			end
+		end
+
+		if( shouldBreak ) then
+			break
 		end
 	end
 
-	scope.variables[ data.loopVar ] = restore
+	m.commands[ 'break' ]           = prevBreak
+	m.commands[ 'continue' ]        = prevContinue
+	scope.variables[ data.loopVar ] = prevLoopVar
 end
 
 local function foreachBasic( cmd )
