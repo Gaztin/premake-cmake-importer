@@ -163,3 +163,12 @@ function m.findMatchingParentheses( str, index )
 
 	return nil
 end
+
+function m.replace( text, replacee, replacement )
+	local st, en = string.find( text, replacee, 1, true )
+	if( st ) then
+		return string.sub( text, 1, st - 1 ) .. replacement .. m.replace( string.sub( text, en + 1 ), replacee, replacement )
+	else
+		return text
+	end
+end

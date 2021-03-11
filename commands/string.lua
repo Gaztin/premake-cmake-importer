@@ -3,7 +3,18 @@ local m           = p.extensions.impcmake
 local subcommands = { }
 
 -- TODO: FIND
--- TODO: REPLACE
+
+function subcommands.REPLACE( match, replacement, outVar, ... )
+	local input = select( 1, ... )
+	local scope = m.scope.current()
+	
+	if( select( '#', ... ) > 1 ) then
+		p.error( 'string: REPLACE with multiple inputs is not supported!' )
+	end
+
+	scope.variables[ outVar ] = m.replace( input, match, replacement )
+end
+
 -- TODO: REGEX
 
 function subcommands.APPEND( strVar, ... )
