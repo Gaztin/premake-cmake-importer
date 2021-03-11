@@ -54,11 +54,11 @@ function m.conditions.evalExpression( str )
 
 		-- Determine what type the constant is
 		if( expr.op_type == m.OP_TYPE.CONSTANT ) then
+			expr.value = m.resolveVariables( expr.value )
 			if( m.isStringLiteral( expr.value ) ) then
-				expr.value = m.resolveVariables( expr.value )
 				expr.value = string.sub( expr.value, 2, #expr.value - 1 )
 			else
-				expr.value = tonumber( expr.value ) or m.resolveVariables( expr.value )
+				expr.value = tonumber( expr.value ) or m.expandVariable( expr.value, expr.value )
 			end
 		end
 
@@ -81,20 +81,16 @@ function m.conditions.evalExpression( str )
 			}
 
 			if( which_op == 'EXISTS' ) then
-
-				-- TODO: Implement EXISTS
+				p.warn( 'conditions: EXISTS not supported!' )
 				newExpr.value = false
 
 			elseif( which_op == 'COMMAND' ) then
-
-				-- TODO: Implement COMMAND
+				p.warn( 'conditions: COMMAND not supported!' )
 				newExpr.value = false
 
 			elseif( which_op == 'DEFINED' ) then
-
-				-- DEFINED yields true as long as the constant is not nil or NOTFOUND
-				newExpr.value = ( ( constexpr.value ~= nil ) and ( constexpr.value ~= m.NOTFOUND ) )
-
+				local defined = m.expandVariable( constexpr.value )
+				newExpr.value = defined ~= m.NOTFOUND
 			end
 
 			-- Replace operator and argument with a combined evaluation
