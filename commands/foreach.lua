@@ -17,6 +17,8 @@ local function endforeach( commands, data )
 		shouldBreak = true
 	end
 
+	m.indent = m.indent + 1
+
 	for _,item in ipairs( data.items ) do
 		scope.variables[ data.loopVar ] = item
 		
@@ -34,6 +36,7 @@ local function endforeach( commands, data )
 		end
 	end
 
+	m.indent                        = m.indent - 1
 	m.commands[ 'break' ]           = prevBreak
 	m.commands[ 'continue' ]        = prevContinue
 	scope.variables[ data.loopVar ] = prevLoopVar

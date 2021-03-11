@@ -14,6 +14,8 @@ local function endwhile( commands, data )
 	m.commands[ 'break' ] = function( cmd )
 		shouldBreak = true
 	end
+	
+	m.indent = m.indent + 1
 
 	while( m.conditions.evalExpression( data.expression ) ) do
 		for i,command in ipairs( commands ) do
@@ -30,6 +32,7 @@ local function endwhile( commands, data )
 		end
 	end
 
+	m.indent                 = m.indent + 1
 	m.commands[ 'break' ]    = prevBreak
 	m.commands[ 'continue' ] = prevContinue
 end

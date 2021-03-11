@@ -1,6 +1,6 @@
 local p      = premake
 local m      = p.extensions.impcmake
-local indent = 0
+m.indent     = 0
 m.commands   = { }
 
 function m.executeCommand( cmd )
@@ -9,7 +9,7 @@ function m.executeCommand( cmd )
 	else
 		local callback = m.commands[ cmd.name ]
 		if( callback ) then
-			verbosef( '%s> %s (%s)', string.rep( '-', indent + 1 ), cmd.name, cmd.argString )
+			verbosef( '%s> %s (%s)', string.rep( '-', m.indent + 1 ), cmd.name, cmd.argString )
 
 			-- Resolve variables and remove quotation marks before invoking command
 			cmd           = table.deepcopy( cmd )
@@ -23,9 +23,9 @@ function m.executeCommand( cmd )
 				end
 			end
 
-			indent = indent + 1
+			m.indent = m.indent + 1
 			callback( cmd )
-			indent = indent - 1
+			m.indent = m.indent - 1
 
 			return true
 		else

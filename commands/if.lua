@@ -3,6 +3,9 @@ local m = p.extensions.impcmake
 
 local function endif( commands, data )
 	local nestLevel = 0
+	
+	m.indent = m.indent + 1
+
 	for i,command in ipairs( commands ) do
 		if( not data.handled ) then
 			if( command.name == 'if' ) then
@@ -22,6 +25,8 @@ local function endif( commands, data )
 			end
 		end
 	end
+
+	m.indent = m.indent - 1
 end
 
 m.commands[ 'if' ] = function( cmd )
