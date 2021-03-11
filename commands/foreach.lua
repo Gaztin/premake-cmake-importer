@@ -53,12 +53,18 @@ local function foreachBasicMultiArg( cmd )
 	}
 end
 
+local function foreachIn( cmd )
+	p.error( 'This type of foreach loop is not supported' )
+end
+
 function m.commands.foreach( cmd )
 	local data
 	if( #cmd.arguments == 2 ) then
 		data = foreachBasic( cmd )
 	elseif( #cmd.arguments >= 3 and cmd.arguments[ 2 ] == 'RANGE' ) then
 		data = foreachRange( cmd )
+	elseif( #cmd.arguments >= 3 and table.indexof( cmd.arguments, 'IN' ) ~= nil ) then
+		data = foreachIn( cmd )
 	else
 		data = foreachBasicMultiArg( cmd )
 	end
