@@ -23,13 +23,13 @@ end
 local function foreachBasic( cmd )
 	return {
 		loopVar = cmd.arguments[ 1 ],
-		items   = string.explode( m.resolveVariables( cmd.arguments[ 2 ] ), ';' ),
+		items   = string.explode( cmd.arguments[ 2 ], '[ ;]+' ),
 	}
 end
 
 local function foreachRange( cmd )
-	local start = #cmd.arguments > 3 and tonumber( m.resolveVariables( cmd.arguments[ 3 ] ) ) or 0
-	local stop  = tonumber( m.resolveVariables( cmd.arguments[ #cmd.arguments > 3 and 4 or 3 ] ) )
+	local start = #cmd.arguments > 3 and tonumber( cmd.arguments[ 3 ] ) or 0
+	local stop  = tonumber( cmd.arguments[ #cmd.arguments > 3 and 4 or 3 ] )
 	local step  = #cmd.arguments > 4 and tonumber( m.resolveVariables( cmd.arguments[ 5 ] ) ) or 1
 	if( stop == nil ) then
 		p.error( 'Stopping point for range-variant foreach was not a number (%s)', stop )
@@ -46,6 +46,13 @@ local function foreachRange( cmd )
 	}
 end
 
+local function foreachBasicMultiArg( cmd )
+	return {
+		loopVar = cmd.arguments[ 1 ],
+		items   = table.pack( table.unpack( cmd.arguments, 2 ) ),
+	}
+end
+
 function m.commands.foreach( cmd )
 	local data
 	if( #cmd.arguments == 2 ) then
@@ -53,7 +60,7 @@ function m.commands.foreach( cmd )
 	elseif( #cmd.arguments >= 3 and cmd.arguments[ 2 ] == 'RANGE' ) then
 		data = foreachRange( cmd )
 	else
-		p.error( 'This type of foreach loop is not supported' )
+		data = foreachBasicMultiArg( cmd )
 	end
 
 	m.groups.push( 'foreach', 'endforeach', endforeach, data )
