@@ -138,9 +138,9 @@ local function findPath( cmd, keyword, extension )
 				local filePath = path.join( packageRoot, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = packageRoot
+					m.cache_entries[ var ] = filePath
 
-					return packageRoot
+					return filePath
 				end
 			end
 		end
@@ -160,18 +160,18 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( archDir, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = archDir
+						m.cache_entries[ var ] = filePath
 
-						return archDir
+						return filePath
 					end
 				end
 
 				local filePath = path.join( dir, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = dir
+					m.cache_entries[ var ] = filePath
 
-					return dir
+					return filePath
 				end
 			end
 		end
@@ -186,9 +186,9 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = pathh
+						m.cache_entries[ var ] = filePath
 
-						return pathh
+						return filePath
 					end
 				end
 			end
@@ -204,9 +204,9 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = pathh
+						m.cache_entries[ var ] = filePath
 
-						return pathh
+						return filePath
 					end
 				end
 			end
@@ -227,9 +227,9 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( archDir, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = archDir
+						m.cache_entries[ var ] = filePath
 
-						return archDir
+						return filePath
 					end
 				end
 
@@ -238,7 +238,7 @@ local function findPath( cmd, keyword, extension )
 				if( os.isfile( filePath ) ) then
 					m.cache_entries[ var ] = dir
 
-					return dir
+					return filePath
 				end
 			end
 		end
@@ -253,9 +253,9 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = pathh
+						m.cache_entries[ var ] = filePath
 
-						return pathh
+						return filePath
 					end
 				end
 			end
@@ -271,9 +271,9 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = pathh
+						m.cache_entries[ var ] = filePath
 
-						return pathh
+						return filePath
 					end
 				end
 			end
@@ -285,9 +285,9 @@ local function findPath( cmd, keyword, extension )
 			local filePath = path.join( hint, name )
 
 			if( os.isfile( filePath ) ) then
-				m.cache_entries[ var ] = hint
+				m.cache_entries[ var ] = filePath
 
-				return hint
+				return filePath
 			end
 		end
 	end
@@ -301,9 +301,9 @@ local function findPath( cmd, keyword, extension )
 				local filePath = path.join( pathEnvPath, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = pathEnvPath
+					m.cache_entries[ var ] = filePath
 
-					return pathEnvPath
+					return filePath
 				end
 			end
 		end
@@ -316,9 +316,9 @@ local function findPath( cmd, keyword, extension )
 			local filePath = path.join( pathh, name )
 
 			if( os.isfile( filePath ) ) then
-				m.cache_entries[ var ] = pathh
+				m.cache_entries[ var ] = filePath
 
-				return pathh
+				return filePath
 			end
 		end
 	end
