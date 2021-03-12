@@ -13,6 +13,10 @@ require 'cmake_scope'
 require 'cmake_script'
 require 'cmake_utils'
 
+if( _OPTIONS.verbose ) then
+	require 'cmake_profiling'
+end
+
 m._VERSION              = '1.0.0'
 m._LATEST_CMAKE_VERSION = '3.17.3'
 
@@ -37,4 +41,8 @@ function cmake_project( filePath )
 	m.scope.push()
 	m.loadScript( filePath )
 	m.scope.pop()
+
+	if( _OPTIONS.verbose ) then
+		m.profiling.printReport()
+	end
 end

@@ -36,7 +36,13 @@ function m.executeCommand( cmd )
 			end
 
 			m.indent()
-			callback( cmd )
+
+			if( _OPTIONS.verbose ) then
+				m.profiling.recordFunction( cmd.name, callback, cmd )
+			else
+				callback( cmd )
+			end
+
 			m.unindent()
 
 			return true
