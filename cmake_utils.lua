@@ -122,7 +122,7 @@ function m.expandVariable( var, defaultValue )
 		scope = scope.parent
 	end
 
-	return defaultValue or m.NOTFOUND
+	return m.cache_entries[ var ] or defaultValue or m.NOTFOUND
 end
 
 function m.isStringLiteral( str )

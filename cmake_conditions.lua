@@ -58,7 +58,7 @@ function m.conditions.evalExpression( str )
 			if( m.isStringLiteral( expr.value ) ) then
 				expr.value = string.sub( expr.value, 2, #expr.value - 1 )
 			else
-				expr.value = tonumber( expr.value ) or m.expandVariable( expr.value, expr.value )
+				expr.value = tonumber( expr.value ) or m.expandVariable( expr.value ) ~= m.NOTFOUND
 			end
 		end
 
