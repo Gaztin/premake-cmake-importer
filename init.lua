@@ -24,6 +24,7 @@ m._LATEST_CMAKE_VERSION = '3.17.3'
 
 m.HOST_SYSTEM_NAME      = os.outputof( 'uname -s' ) or os.host()
 m.HOST_SYSTEM_PROCESSOR = os.getenv( 'PROCESSOR_ARCHITECTURE' ) or os.outputof( 'uname -m' ) or os.outputof( 'arch' )
+m.ENV_SEPARATOR         = os.ishost( 'windows' ) and ';' or ':'
 
 -- Global constants
 m.ON       = 'ON'

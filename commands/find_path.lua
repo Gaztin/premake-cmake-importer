@@ -214,10 +214,9 @@ local function findPath( cmd, keyword, extension )
 	end
 
 	if( searchCMakeEnvPath ) then
-		local separator           = iif( os.ishost( 'windows' ), ';', ':' )
 		local libraryArchitecture = os.getenv( 'CMAKE_LIBRARY_ARCHITECTURE' )
 		local prefixPath          = os.getenv( 'CMAKE_PREFIX_PATH' )
-		local prefixes            = prefixPath and string.explode( prefixPath, separator ) or { }
+		local prefixes            = prefixPath and string.explode( prefixPath, m.ENV_SEPARATOR ) or { }
 
 		for _,prefix in ipairs( prefixes ) do
 			local dir = path.join( prefix, keywordDirs[ keyword ] )
@@ -293,7 +292,23 @@ local function findPath( cmd, keyword, extension )
 		end
 	end
 
-	-- TODO: 5. Search standard system environment variables
+	if( searchSysEnvPath ) then
+		local pathEnv      = os.getenv( 'PATH' )
+		local pathEnvPaths = string.explode( pathEnv, m.ENV_SEPARATOR )
+
+		for _,pathEnvPath in ipairs( pathEnvPaths ) do
+			for _,name in ipairs( names ) do
+				local filePath = path.join( pathEnvPath, name )
+
+				if( os.isfile( filePath ) ) then
+					m.cache_entries[ var ] = pathEnvPath
+
+					return pathEnvPath
+				end
+			end
+		end
+	end
+	
 	-- TODO: 6. Search CMake variables in the Platform files
 
 	for _,pathh in ipairs( paths ) do
