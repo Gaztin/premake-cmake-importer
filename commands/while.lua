@@ -15,9 +15,14 @@ local function endwhile( commands, data )
 		shouldBreak = true
 	end
 	
-	m.indent = m.indent + 1
+	m.indent()
 
+	local iterations = 0
 	while( m.conditions.evalExpression( data.expression ) ) do
+		if( iterations > 0 ) then
+			verbosef( m.indentation( -1 ) .. 'nextwhile' )
+		end
+
 		for i,command in ipairs( commands ) do
 			m.executeCommand( command )
 
@@ -27,12 +32,16 @@ local function endwhile( commands, data )
 			end
 		end
 
+		iterations = iterations + 1
+
 		if( shouldBreak ) then
 			break
 		end
 	end
 
-	m.indent                 = m.indent + 1
+	m.unindent()
+	verbosef( m.indentation() .. 'endwhile' )
+
 	m.commands[ 'break' ]    = prevBreak
 	m.commands[ 'continue' ] = prevContinue
 end

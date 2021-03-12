@@ -17,12 +17,12 @@ local function endforeach( commands, data )
 		shouldBreak = true
 	end
 
-	m.indent = m.indent + 1
+	m.indent()
 
-	for _,item in ipairs( data.items ) do
+	for i,item in ipairs( data.items ) do
 		scope.variables[ data.loopVar ] = item
 		
-		for _,command in ipairs( commands ) do
+		for i,command in ipairs( commands ) do
 			m.executeCommand( command )
 
 			if( shouldContinue ) then
@@ -31,12 +31,18 @@ local function endforeach( commands, data )
 			end
 		end
 
+		if( i < #data.items and not shouldBreak ) then
+			verbosef( m.indentation( -1 ) .. 'nextforeach (%s = %d)', data.loopVar, i )
+		end
+
 		if( shouldBreak ) then
 			break
 		end
 	end
 
-	m.indent                        = m.indent - 1
+	m.unindent()
+	verbosef( m.indentation() .. 'endforeach' )
+
 	m.commands[ 'break' ]           = prevBreak
 	m.commands[ 'continue' ]        = prevContinue
 	scope.variables[ data.loopVar ] = prevLoopVar
