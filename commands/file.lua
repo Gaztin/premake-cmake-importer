@@ -37,7 +37,54 @@ function subcommands.TOUCH_NOCREATE( ... )
 end
 
 -- TODO: GENERATE OUTPUT
--- TODO: {GLOB | GLOB_RECURSE}
+
+function subcommands.GLOB( var, ... )
+	local files   = { }
+	local options = {
+		relativeTo = nil,
+		listDirs   = true,
+
+		LIST_DIRECTORIES = function( value )
+			options.listDirs = m.isTrue( value )
+			return 1
+		end,
+
+		RELATIVE = function( path )
+			options.relativeTo = path
+			return 1
+		end,
+
+		CONFIGURE_DEPENDS = function()
+			p.warn( 'file: GLOB with CONFIGURE_DEPENDS option has no effect!' )
+			return 0
+		end,
+
+		__globbingExpressions = function( ... )
+			local expressionCount = select( '#', ... )
+			for i=1,expressionCount do
+				local pattern = select( i, ... )
+				local matches = os.matchfiles( pattern )
+				files         = table.join( files, matches )
+			end
+			return expressionCount
+		end
+	}
+
+	local argCount = select( '#', ... )
+	local i        = 1
+	repeat
+		local arg = select( i, ... )
+		i = i + 1
+		
+		local option = options[ arg ] or options.__globbingExpressions
+		i = i + option( select( i, ... ) )
+	until( i > argCount )
+
+	local scope            = m.scope.current()
+	scope.variables[ var ] = table.concat( files, ';' )
+end
+
+-- TODO: GLOB_RECURSE
 -- TODO: RENAME
 -- TODO: {REMOVE | REMOVE_RECURSE}
 -- TODO: MAKE_DIRECTORY
