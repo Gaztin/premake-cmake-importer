@@ -134,28 +134,7 @@ function m.deserializeCommandList( content )
 		command.argString = string.match( command.argString, '%s*(.*%S)%s*' ) or command.argString
 		-- Commands in CMake are case insensitive
 		command.name      = command.name:lower()
-
-		local it = string.find( content, '%S', leftParenthesis + 1, false )
-
-		while( it and it < rightParenthesis ) do
-			local leftQuotationMark = string.find( content, '"', it, true )
-
-			if( leftQuotationMark and leftQuotationMark == it ) then
-				local rightQuotationMark = string.find( content, '"', leftQuotationMark + 1, true )
-
-				table.insert( command.arguments, string.sub( content, leftQuotationMark, rightQuotationMark ) )
-
-				it = string.find( content, '%S', rightQuotationMark + 1, false )
-
-			else
-				local nextSpace = string.find( content, ' ',  it, true )
-				local tail      = iif( ( nextSpace ~= nil ) and ( nextSpace < rightParenthesis ), nextSpace - 1, rightParenthesis - 1 )
-
-				table.insert( command.arguments, string.sub( content, it, tail ) )
-
-				it = string.find( content, '%S', tail + 1, false )
-			end
-		end
+		command.arguments = m.splitTerms( command.argString )
 
 		-- Store command
 		table.insert( commandList, command )

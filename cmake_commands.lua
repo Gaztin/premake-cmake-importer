@@ -27,13 +27,26 @@ function m.executeCommand( cmd )
 			cmd           = table.deepcopy( cmd )
 			cmd.argString = m.resolveVariables( cmd.argString )
 
-			for i=1,#cmd.arguments do
+			local i = 1
+			repeat
 				cmd.arguments[ i ] = m.resolveVariables( cmd.arguments[ i ] )
+				-- After resolving, ${my_var} may have been expanded into 'Foo Bar' which should
+				-- replace the previous argument as two new arguments
+				local splitArguments = m.splitTerms( cmd.arguments[ i ] )
+				if( #splitArguments > 1 ) then
+					table.remove( cmd.arguments, i )
+					for _,arg in ipairs( splitArguments ) do
+						table.insert( cmd.arguments, i, arg )
+						i = i + 1
+					end
+				end
 
 				if( m.isStringLiteral( cmd.arguments[ i ] ) ) then
 					cmd.arguments[ i ] = string.sub( cmd.arguments[ i ], 2, string.len( cmd.arguments[ i ] ) - 1 )
 				end
-			end
+
+				i = i + 1
+			until( i > #cmd.arguments )
 
 			m.indent()
 

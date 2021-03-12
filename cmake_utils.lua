@@ -1,6 +1,30 @@
 local p = premake
 local m = p.extensions.impcmake
 
+function m.splitTerms( text )
+	local head  = string.find( text, '%S' )
+	local terms = { }
+
+	while( head ) do
+		local leftQuotationMark = string.find( text, '"', head, true )
+
+		if( leftQuotationMark and leftQuotationMark == head ) then
+			local rightQuotationMark = string.find( text, '"',  leftQuotationMark  + 1, true )
+			local term               = string.sub( text, leftQuotationMark, rightQuotationMark )
+			head                     = string.find( text, '%S', rightQuotationMark + 1, false )
+			table.insert( terms, term )
+		else
+			local nextSpace = string.find( text, '%s', head )
+			local tail      = nextSpace and ( nextSpace - 1 )
+			local term      = string.sub( text, head, tail )
+			head            = tail and string.find( text, '%S', tail + 1, false )
+			table.insert( terms, term )
+		end
+	end
+
+	return terms
+end
+
 function m.isTrue( value )
 	if( value == nil ) then
 		return false
