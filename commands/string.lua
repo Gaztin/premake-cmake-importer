@@ -69,7 +69,8 @@ function m.commands.string( cmd )
 	local subcommandName = cmd.arguments[ 1 ]
 	local subcommand     = subcommands[ subcommandName ]
 	if( subcommand == nil ) then
-		p.error( 'String subcommand "%s" is not implemented!', subcommandName )
+		p.warn( 'String subcommand "%s" is not implemented!', subcommandName )
+		return
 	end
 
 	subcommand( table.unpack( cmd.arguments, 2 ) )

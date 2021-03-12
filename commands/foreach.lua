@@ -82,7 +82,12 @@ local function foreachBasicMultiArg( cmd )
 end
 
 local function foreachIn( cmd )
-	p.error( 'This type of foreach loop is not supported' )
+	p.warn( 'for: IN loops are not supported!' )
+	
+	return {
+		loopVar = 'i',
+		items   = { },
+	}
 end
 
 function m.commands.foreach( cmd )
