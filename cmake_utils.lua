@@ -71,6 +71,11 @@ function m.resolveVariables( str )
 				scope = scope.parent
 			end
 
+			-- Find variable in cache entries
+			if( value == nil ) then
+				value = m.cache_entries[ var ]
+			end
+
 			str = string.sub( str, 1, st - 1 ) .. ( value or '' ) .. string.sub( str, en + 1 )
 		end
 	until( st == nil )
