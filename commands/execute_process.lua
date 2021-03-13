@@ -58,7 +58,11 @@ function options.COMMAND_ECHO( process, where )
 	return 1
 end
 
--- TODO: OUTPUT_STRIP_TRAILING_WHITESPACE
+function options.OUTPUT_STRIP_TRAILING_WHITESPACE( process )
+	process.stripTrailingWhitespaceInOutput = true
+	return 0
+end
+
 -- TODO: ERROR_STRIP_TRAILING_WHITESPACE
 -- TODO: ENCODING
 
@@ -82,10 +86,6 @@ function m.commands.execute_process( cmd )
 		p.error( 'execute_process: No commands given!' )
 	end
 
-	if( not process.resultVar and not process.resultsVar ) then
-		p.error( 'execute_process: Missing result variable!' )
-	end
-
 	local outputs = { }
 	local results = { }
 	for i,command in ipairs( process.commands ) do
@@ -95,8 +95,17 @@ function m.commands.execute_process( cmd )
 			io.stderr:write( '[CMake Process]: ' .. command .. '\n' )
 		end
 
-		local output, result = os.outputof( command )
-		table.insert( outputs, output or '' )
+		local pipe   = io.popen( command )
+		local output = pipe:read( '*a' ) or ''
+		local success, exitCause, exitCode = pipe:close()
+
+		if( process.stripTrailingWhitespaceInOutput ) then
+			output = string.match( output, '(.*)%s*' ) or output
+		end
+
+		p.error( output )
+
+		table.insert( outputs, output )
 		table.insert( results, result )
 	end
 
