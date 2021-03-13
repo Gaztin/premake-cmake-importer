@@ -17,7 +17,12 @@ local function getOptionArgs( ... )
 end
 
 function options.COMMAND( process, ... )
-	local args    = getOptionArgs( ... )
+	local args = getOptionArgs( ... )
+	-- Capture first argument in quotation marks in case it's a path that contains spaces
+	if( #args > 0 ) then
+		args[ 1 ] = '"' .. args[ 1 ] .. '"'
+	end
+
 	local command = table.concat( args, ' ' )
 
 	table.insert( process.commands, command )
@@ -102,8 +107,6 @@ function m.commands.execute_process( cmd )
 		if( process.stripTrailingWhitespaceInOutput ) then
 			output = string.match( output, '(.*)%s*' ) or output
 		end
-
-		p.error( output )
 
 		table.insert( outputs, output )
 		table.insert( results, result )
