@@ -32,8 +32,7 @@ function m.commands.add_executable( cmd )
 			elseif( arguments[ i ] == 'MACOSX_BUNDLE' ) then
 				-- TODO: https://cmake.org/cmake/help/v3.0/prop_tgt/MACOSX_BUNDLE.html
 			else
-				local f = m.resolveVariables( arguments[ i ] )
-
+				local f = m.expandVariables( arguments[ i ] )
 				for _,v in ipairs( string.explode( f, ' ' ) ) do
 					local rebasedSourceFile = path.rebase( v, scope.variables.PROJECT_SOURCE_DIR, os.getcwd() )
 

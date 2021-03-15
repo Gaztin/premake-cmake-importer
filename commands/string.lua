@@ -34,12 +34,12 @@ end
 
 function subcommands.TOLOWER( str, outVar )
 	local scope               = m.scope.current()
-	scope.variables[ outVar ] = string.lower( m.resolveVariables( str ) )
+	scope.variables[ outVar ] = string.lower( m.expandVariables( str ) )
 end
 
 function subcommands.TOUPPER( str, outVar )
 	local scope               = m.scope.current()
-	scope.variables[ outVar ] = string.upper( m.resolveVariables( str ) )
+	scope.variables[ outVar ] = string.upper( m.expandVariables( str ) )
 end
 
 -- TODO: LENGTH

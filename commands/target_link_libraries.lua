@@ -22,7 +22,7 @@ function m.commands.target_link_libraries( cmd )
 			modifiers[ arg ] = true
 			-- TODO: Do something with this information
 		else
-			arg = m.resolveVariables( arg )
+			arg = m.expandVariables( arg )
 
 			for _,v in ipairs( string.explode( arg, ' ' ) ) do
 				local targetName = m.resolveAlias( v )

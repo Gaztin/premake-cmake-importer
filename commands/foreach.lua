@@ -58,7 +58,7 @@ end
 local function foreachRange( cmd )
 	local start = #cmd.arguments > 3 and tonumber( cmd.arguments[ 3 ] ) or 0
 	local stop  = tonumber( cmd.arguments[ #cmd.arguments > 3 and 4 or 3 ] )
-	local step  = #cmd.arguments > 4 and tonumber( m.resolveVariables( cmd.arguments[ 5 ] ) ) or 1
+	local step  = #cmd.arguments > 4 and tonumber( m.expandVariables( cmd.arguments[ 5 ] ) ) or 1
 	if( stop == nil ) then
 		p.error( 'Stopping point for range-variant foreach was not a number (%s)', stop )
 	end

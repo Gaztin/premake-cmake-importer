@@ -54,11 +54,11 @@ function m.conditions.evalExpression( str )
 
 		-- Determine what type the constant is
 		if( expr.op_type == m.OP_TYPE.CONSTANT ) then
-			expr.value = m.resolveVariables( expr.value )
+			expr.value = m.expandVariables( expr.value )
 			if( m.isStringLiteral( expr.value ) ) then
 				expr.value = string.sub( expr.value, 2, #expr.value - 1 )
 			else
-				expr.value = tonumber( expr.value ) or m.expandVariable( expr.value ) ~= m.NOTFOUND
+				expr.value = tonumber( expr.value ) or expr.value
 			end
 		end
 
@@ -89,8 +89,17 @@ function m.conditions.evalExpression( str )
 				newExpr.value = false
 
 			elseif( which_op == 'DEFINED' ) then
-				local defined = constexpr.value and m.expandVariable( constexpr.value ) or m.NOTFOUND
-				newExpr.value = defined ~= m.NOTFOUND
+				local cacheVar = string.match( constexpr.value, 'CACHE{(.+)}' )
+				if( cacheVar ) then
+					newExpr.value = m.cache_entries[ cacheVar ] ~= nil
+				else
+					local envVar = string.match( constexpr.value, 'ENV{(.+)}' )
+					if( envVar ) then
+						newExpr.value = os.getenv( envVar ) ~= nil
+					else
+						newExpr.value = m.dereference( constexpr.value ) ~= nil
+					end
+				end
 			end
 
 			-- Replace operator and argument with a combined evaluation

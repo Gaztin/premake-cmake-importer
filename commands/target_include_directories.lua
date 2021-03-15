@@ -26,7 +26,7 @@ function m.commands.target_include_directories( cmd )
 			if( modifiers[ 'BEFORE'    ] == true ) then p.warn( 'Unhandled modifier "BEFORE" was specified for "target_include_directories"'    ) end
 			if( modifiers[ 'INTERFACE' ] == true ) then p.warn( 'Unhandled modifier "INTERFACE" was specified for "target_include_directories"' ) end
 
-			arg = m.resolveVariables( arg )
+			arg = m.expandVariables( arg )
 
 			for _,v in ipairs( string.explode( arg, ' ' ) ) do
 				local rebasedIncludeDir = path.rebase( v, baseDir, os.getcwd() )
