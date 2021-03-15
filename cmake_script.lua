@@ -66,44 +66,13 @@ function m.loadScript( filePath )
 	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
 
 	-- Execute commands in order
-
 	for _,cmd in ipairs( commandList ) do
 		m.executeCommand( cmd )
 	end
 
-	-- TODO: Validate allowed cache entries against allowed cache entries
-
 	-- Handle cache entries
 	for entry,value in pairs( m.cache_entries ) do
-		if( entry == 'CMAKE_CXX_FLAGS' ) then
-
-			-- Replace surrounding quotation marks
-			if( m.isStringLiteral( value ) ) then
-				value = string.gsub( value, '"(.*)"', '%1' )
-			end
-
-			local options = value:explode( ' ' )
-
-			buildoptions( options )
-		end
-	end
-
-	-- Handle allowed cache entries
-	for entry,allowed in pairs( m.cache_entries_allowed ) do
-		if( entry == 'CMAKE_BUILD_TYPE' ) then
-
-			-- Remove surrounding quotation marks
-			for i = 1, #allowed do
-				allowed[ i ] = string.gsub( allowed[ i ], '"(.*)"', '%1' )
-			end
-
-			-- Replace allowed configurations
-			removeconfigurations { '*' }
-			configurations( allowed )
-
-		else
-			p.warn( 'Unhandled allowed values for entry %s: [%s]', entry, table.implode( allowed, '', '', ', ' ) )
-		end
+		m.handleLeftoverCacheEntry( entry, value )
 	end
 
 	if( currentGroup ) then
@@ -227,4 +196,10 @@ function m.addSystemVariables()
 	end
 
 	-- TODO: CMAKE_LIBRARY_ARCHITECTURE
+end
+
+function m.handleLeftoverCacheEntry( name, value )
+	if( name == 'CMAKE_CXX_FLAGS' ) then
+		buildoptions( value )
+	end
 end

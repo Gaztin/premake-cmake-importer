@@ -76,11 +76,6 @@ function m.isTrue( value )
 	elseif( t == 'number' ) then
 		return ( value ~= 0 )
 	elseif( t == 'string' ) then
-		if( m.isStringLiteral( value ) ) then
-			-- The importer should be engineered in such a way that commands don't have to worry about string literals
-			p.error( 'a string literal cannot be true or false' )
-		end
-
 		if( m.isTrueConstant( value ) ) then
 			return true
 		elseif( m.isFalseConstant( value ) ) then
@@ -165,14 +160,6 @@ function m.dereference( var )
 	end
 
 	return m.cache_entries[ var ]
-end
-
-function m.isStringLiteral( str )
-	return ( str:startswith( '"' ) and str:endswith( '"' ) )
-end
-
-function m.toStringLiteral( str )
-	return m.isStringLiteral( str ) and str or ( '"' .. str .. '"' )
 end
 
 function m.findUncaptured( str, delim, startIndex )

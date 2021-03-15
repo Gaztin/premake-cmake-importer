@@ -41,10 +41,6 @@ function m.executeCommand( cmd )
 					end
 				end
 
-				if( m.isStringLiteral( cmd.arguments[ i ] ) ) then
-					cmd.arguments[ i ] = string.sub( cmd.arguments[ i ], 2, string.len( cmd.arguments[ i ] ) - 1 )
-				end
-
 				i = i + 1
 			until( i > #cmd.arguments )
 

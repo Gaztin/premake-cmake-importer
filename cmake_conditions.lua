@@ -2,6 +2,55 @@ local p      = premake
 local m      = p.extensions.impcmake
 m.conditions = { }
 
+local unaryOperators = {
+	EXISTS = function( rhs )
+		p.warn( 'conditions: EXISTS not supported!' )
+	end,
+
+	COMMAND = function( rhs )
+		p.warn( 'conditions: COMMAND not supported!' )
+	end,
+
+	DEFINED = function( rhs )
+		local cacheVar = string.match( rhs, 'CACHE{(.+)}' )
+		if( cacheVar ) then
+			return m.cache_entries[ cacheVar ] ~= nil
+		end
+
+		local envVar = string.match( rhs, 'ENV{(.+)}' )
+		if( envVar ) then
+			return os.getenv( envVar ) ~= nil
+		end
+
+		return m.dereference( rhs ) ~= nil
+	end,
+}
+
+local binaryOperators = {
+	EQUAL                 = function( lhs, rhs )                                                     return lhs == rhs end,
+	LESS                  = function( lhs, rhs )                                                     return lhs <  rhs end,
+	LESS_EQUAL            = function( lhs, rhs )                                                     return lhs <= rhs end,
+	GREATER               = function( lhs, rhs )                                                     return lhs >  rhs end,
+	GREATER_EQUAL         = function( lhs, rhs )                                                     return lhs >= rhs end,
+	STREQUAL              = function( lhs, rhs ) p.warn( 'STREQUAL(%s, %s)', lhs, rhs )              return lhs == rhs end,
+	STRLESS               = function( lhs, rhs ) p.warn( 'STRLESS(%s, %s)', lhs, rhs )               return lhs <  rhs end,
+	STRLESS_EQUAL         = function( lhs, rhs ) p.warn( 'STRLESS_EQUAL(%s, %s)', lhs, rhs )         return lhs <= rhs end,
+	STRGREATER            = function( lhs, rhs ) p.warn( 'STRGREATER(%s, %s)', lhs, rhs )            return lhs >  rhs end,
+	STRGREATER_EQUAL      = function( lhs, rhs ) p.warn( 'STRGREATER_EQUAL(%s, %s)', lhs, rhs )      return lhs >= rhs end,
+	VERSION_EQUAL         = function( lhs, rhs ) p.warn( 'VERSION_EQUAL(%s, %s)', lhs, rhs )         return lhs == rhs end,
+	VERSION_LESS          = function( lhs, rhs ) p.warn( 'VERSION_LESS(%s, %s)', lhs, rhs )          return lhs <  rhs end,
+	VERSION_LESS_EQUAL    = function( lhs, rhs ) p.warn( 'VERSION_LESS_EQUAL(%s, %s)', lhs, rhs )    return lhs <= rhs end,
+	VERSION_GREATER       = function( lhs, rhs ) p.warn( 'VERSION_GREATER(%s, %s)', lhs, rhs )       return lhs >  rhs end,
+	VERSION_GREATER_EQUAL = function( lhs, rhs ) p.warn( 'VERSION_GREATER_EQUAL(%s, %s)', lhs, rhs ) return lhs >= rhs end,
+	MATCHES               = function( lhs, rhs ) p.warn( 'MATCHES(%s, %s)', lhs, rhs )               return lhs == rhs end,
+}
+
+local booleanOperators = {
+	NOT = function( rhs )      return not rhs end,
+	AND = function( lhs, rhs ) return lhs and rhs end,
+	OR  = function( lhs, rhs ) return lhs or rhs end,
+}
+
 function m.conditions.evalExpression( str )
 	-- Recursively expand conditions within this condition. Resolves parentheses wthin parentheses.
 	local leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
@@ -12,226 +61,73 @@ function m.conditions.evalExpression( str )
 		leftParenthesis, rightParenthesis = m.findMatchingParentheses( str )
 	end
 
-	-- Parse symbols
-	local conditions          = { }
-	local insideStringLiteral = false
-	local expressionStart     = 1
-	for i = 1, #str do
-		local c = str:sub( i, i )
+	-- Turn expression: (NOT ${var1} EQUAL "Foo Bar") into array: {NOT, ${var1}, EQUAL, "Foo Bar"}
+	local terms = m.splitTerms( str )
 
-		if( c == '"' ) then
-			insideStringLiteral = not insideStringLiteral
-		elseif( c == ' ' and not insideStringLiteral ) then
-			if( expressionStart < i ) then
-				table.insert( conditions, str:sub( expressionStart, i - 1 ) )
-			end
-			expressionStart = i + 1
-		end
-	end
-	table.insert( conditions, str:sub( expressionStart ) )
-
-	local expressions = { }
-	local unary_ops   = {
-		'EXISTS', 'COMMAND', 'DEFINED',
-	}
-	local binary_ops  = {
-		'EQUAL',              'LESS',             'LESS_EQUAL',            'GREATER',
-		'GREATER_EQUAL',      'STREQUAL',         'STRLESS',               'STRLESS_EQUAL',
-		'STRGREATER',         'STRGREATER_EQUAL', 'VERSION_EQUAL',         'VERSION_LESS',
-		'VERSION_LESS_EQUAL', 'VERSION_GREATER',  'VERSION_GREATER_EQUAL', 'MATCHES',
-	}
-	local bool_ops    = {
-		'NOT', 'AND', 'OR',
-	}
-
-	-- Parse expressions
-	for i = 1, #conditions do
-		local expr   = { }
-		expr.value   = conditions[ i ]
-		expr.op_type = ( table.contains( unary_ops,  expr.value ) and m.OP_TYPE.UNARY  or 0 )
-		             | ( table.contains( binary_ops, expr.value ) and m.OP_TYPE.BINARY or 0 )
-		             | ( table.contains( bool_ops,   expr.value ) and m.OP_TYPE.BOOL   or 0 )
-
-		-- Determine what type the constant is
-		if( expr.op_type == m.OP_TYPE.CONSTANT ) then
-			expr.value = m.expandVariables( expr.value )
-			if( m.isStringLiteral( expr.value ) ) then
-				expr.value = string.sub( expr.value, 2, #expr.value - 1 )
-			else
-				expr.value = tonumber( expr.value ) or expr.value
-			end
-		end
-
-		table.insert( expressions, expr )
-	end
-
-	-- Unary tests. Analyzes @expressions[ 2 ] -> @expressions[ #expressions ]
+	-- Unary operations
 	local i = 1
-	while( ( i + 1 ) <= #expressions ) do
-		i = i + 1
-
-		local which_op      = expressions[ i - 1 ].value
-		local do_unary_test = table.contains( unary_ops, which_op )
-
-		if( do_unary_test ) then
-			local constexpr = expressions[ i ]
-			local newExpr   = {
-				op_type = m.OP_TYPE.CONSTANT,
-				value   = nil,
-			}
-
-			if( which_op == 'EXISTS' ) then
-				p.warn( 'conditions: EXISTS not supported!' )
-				newExpr.value = false
-
-			elseif( which_op == 'COMMAND' ) then
-				p.warn( 'conditions: COMMAND not supported!' )
-				newExpr.value = false
-
-			elseif( which_op == 'DEFINED' ) then
-				local cacheVar = string.match( constexpr.value, 'CACHE{(.+)}' )
-				if( cacheVar ) then
-					newExpr.value = m.cache_entries[ cacheVar ] ~= nil
-				else
-					local envVar = string.match( constexpr.value, 'ENV{(.+)}' )
-					if( envVar ) then
-						newExpr.value = os.getenv( envVar ) ~= nil
-					else
-						newExpr.value = m.dereference( constexpr.value ) ~= nil
-					end
-				end
-			end
-
-			-- Replace operator and argument with a combined evaluation
-			i = i - 1
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.insert( expressions, i, newExpr )
+	while( i < #terms ) do
+		local operator = unaryOperators[ terms[ i ] ]
+		if( operator ) then
+			terms[ i ] = operator( terms[ i + 1 ] )
+			table.remove( terms, i + 1 )
+			i = i + 0
 		end
+		i = i + 1
 	end
 
-	-- Binary tests. Analyzes @expressions[ 2 ] -> @expressions[ #expressions - 1 ]
+	-- Binary operations
 	local i = 1
-	while( ( i + 1 ) < #expressions ) do
-		i = i + 1
-
-		local which_op       = expressions[ i ].value
-		local do_binary_test = table.contains( binary_ops, which_op )
-
-		if( do_binary_test ) then
-			local lhs     = expressions[ i - 1 ]
-			local rhs     = expressions[ i + 1 ]
-			local newexpr = {
-				op_type = m.OP_TYPE.CONSTANT,
-				value   = nil,
-			}
-
-			    if( which_op == 'EQUAL'                 ) then newexpr.value = ( lhs.value == rhs.value )
-			elseif( which_op == 'LESS'                  ) then newexpr.value = ( lhs.value <  rhs.value )
-			elseif( which_op == 'LESS_EQUAL'            ) then newexpr.value = ( lhs.value <= rhs.value )
-			elseif( which_op == 'GREATER'               ) then newexpr.value = ( lhs.value >  rhs.value )
-			elseif( which_op == 'GREATER_EQUAL'         ) then newexpr.value = ( lhs.value >= rhs.value )
-			-- TODO: Properly implement these binary operators
-			elseif( which_op == 'STREQUAL'              ) then newexpr.value = ( lhs.value == rhs.value )
-			elseif( which_op == 'STRLESS'               ) then newexpr.value = ( lhs.value <  rhs.value )
-			elseif( which_op == 'STRLESS_EQUAL'         ) then newexpr.value = ( lhs.value <= rhs.value )
-			elseif( which_op == 'STRGREATER'            ) then newexpr.value = ( lhs.value >  rhs.value )
-			elseif( which_op == 'STRGREATER_EQUAL'      ) then newexpr.value = ( lhs.value >= rhs.value )
-			elseif( which_op == 'VERSION_EQUAL'         ) then newexpr.value = ( lhs.value == rhs.value )
-			elseif( which_op == 'VERSION_LESS'          ) then newexpr.value = ( lhs.value <  rhs.value )
-			elseif( which_op == 'VERSION_LESS_EQUAL'    ) then newexpr.value = ( lhs.value <= rhs.value )
-			elseif( which_op == 'VERSION_GREATER'       ) then newexpr.value = ( lhs.value >  rhs.value )
-			elseif( which_op == 'VERSION_GREATER_EQUAL' ) then newexpr.value = ( lhs.value >= rhs.value )
-			elseif( which_op == 'MATCHES'               ) then newexpr.value = ( lhs.value == rhs.value )
-			end
-
-			if( newexpr.value == nil ) then
-				p.error( 'Unable to solve test due to unhandled binary operator "%s"', which_op )
-			end
-
-			-- Replace both arguments and the operator with the combined evaluation
+	while( i < #terms ) do
+		local operator = binaryOperators[ terms[ i ] ]
+		if( operator ) then
+			terms[ i ] = operator( terms[ i - 1 ], terms[ i + 1 ] )
+			table.remove( terms, i + 1 )
+			table.remove( terms, i - 1 )
 			i = i - 1
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.insert( expressions, i, newexpr )
 		end
+		i = i + 1
 	end
 
-	-- Boolean NOT operations. Analyzes @expressions[ 2 ] -> @expressions[ #expressions ]
+	-- Boolean NOT operations
 	local i = 1
-	while( ( i + 1 ) <= #expressions ) do
-		i = i + 1
-
-		local notexpr = expressions[ i - 1 ]
-
-		if( notexpr.value == 'NOT' ) then
-			local constexpr = expressions[ i ]
-			local newexpr   = {
-				op_type = m.OP_TYPE.CONSTANT,
-				value   = ( not m.isTrue( constexpr.value ) ),
-			}
-
-			-- Replace both the NOT and the constant expressions with a combined evaluation
-			i = i - 1
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.insert( expressions, i, newexpr )
+	while( i < #terms ) do
+		if( terms[ i ] == 'NOT' ) then
+			terms[ i ] = booleanOperators.NOT( terms[ i + 1 ] )
+			table.remove( terms, i + 1 )
+			i = i + 0
 		end
+		i = i + 1
 	end
 
-	-- Boolean AND operations. Analyzes @expressions[ 2 ] -> @expressions[ #expressions - 1 ]
+	-- Boolean AND operations
 	local i = 1
-	while( ( i + 1 ) < #expressions ) do
-		i = i + 1
-
-		local andexpr = expressions[ i ]
-
-		if( andexpr.value == 'AND' ) then
-			local lhs     = expressions[ i - 1 ]
-			local rhs     = expressions[ i + 1 ]
-			local newexpr = {
-				op_type = m.OP_TYPE.CONSTANT,
-				value   = ( lhs.value and rhs.value ),
-			}
-
-			-- Replace both arguments and the operator with a combined evaluation
+	while( i < #terms ) do
+		if( terms[ i ] == 'AND' ) then
+			terms[ i ] = booleanOperators.AND( terms[ i - 1 ], terms[ i + 1 ] )
+			table.remove( terms, i + 1 )
+			table.remove( terms, i - 1 )
 			i = i - 1
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.insert( expressions, i, newexpr )
 		end
+		i = i + 1
 	end
 
-	-- Boolean OR operations. Analyzes @expressions[ 2 ] -> @expressions[ #expressions - 1 ]
+	-- Boolean OR operations
 	local i = 1
-	while( ( i + 1 ) < #expressions ) do
-		i = i + 1
-
-		local orexpr = expressions[ i ]
-
-		if( orexpr.value == 'OR' ) then
-			local lhs     = expressions[ i - 1 ]
-			local rhs     = expressions[ i + 1 ]
-			local newexpr = {
-				op_type = m.OP_TYPE.CONSTANT,
-				value   = ( lhs.value or rhs.value ),
-			}
-
-			-- Replace both arguments and the operator with a combined evaluation
+	while( i < #terms ) do
+		if( terms[ i ] == 'OR' ) then
+			terms[ i ] = booleanOperators.OR( terms[ i - 1 ], terms[ i + 1 ] )
+			table.remove( terms, i + 1 )
+			table.remove( terms, i - 1 )
 			i = i - 1
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.remove( expressions, i )
-			table.insert( expressions, i, newexpr )
 		end
+		i = i + 1
 	end
 
-	local test = true
-	for _,expr in ipairs( expressions ) do
-		test = test and m.isTrue( expr.value )
+	-- Terms should have boiled down to a single one at this point
+	if( #terms ~= 1 ) then
+		p.error( str, #terms )
 	end
 
-	return test
+	return terms[ 1 ]
 end
