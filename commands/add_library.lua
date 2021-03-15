@@ -33,7 +33,7 @@ function m.commands.add_library( cmd )
 		end
 
 		for i=3,#arguments do
-			local f = m.resolveVariables( arguments[ i ] )
+			local f = m.expandVariables( arguments[ i ] )
 
 			for _,v in ipairs( string.explode( f, ' ' ) ) do
 				local rebasedSourceFile = path.rebase( v, scope.variables.PROJECT_SOURCE_DIR, os.getcwd() )

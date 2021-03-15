@@ -75,7 +75,7 @@ function m.commands.execute_process( cmd )
 	local i       = 1
 	local process = {
 		commands = { },
-		echo     = m.expandVariable( 'CMAKE_EXECUTE_PROCESS_COMMAND_ECHO', 'STDOUT' ),
+		echo     = m.dereference( 'CMAKE_EXECUTE_PROCESS_COMMAND_ECHO' ) or 'STDOUT',
 	}
 
 	repeat

@@ -25,29 +25,76 @@ function m.splitTerms( text )
 	return terms
 end
 
+function m.isTrueConstant( value )
+	-- Constants are case-insensitive
+	value = string.upper( value )
+
+	local constants = { '1', m.ON, m.YES, m.TRUE, m.Y }
+	if( table.contains( constants, value ) ) then
+		return true
+	end
+
+	-- Non-zero numbers are true
+	local number = tonumber( value )
+	if( number ~= nil and number ~= 0 ) then
+		return true
+	end
+
+	return false
+end
+
+function m.isFalseConstant( value )
+	-- Empty strings are false
+	if( string.len( value ) == 0 ) then
+		return true
+	end
+
+	-- Constants are case-insensitive
+	value = string.upper( value )
+
+	local constants = { '0', m.OFF, m.NO, m.FALSE, m.N, m.IGNORE, m.NOTFOUND }
+	if( table.contains( constants, value ) ) then
+		return true
+	end
+
+	-- Anything suffixed with "-NOTFOUND" is false
+	if( string.endswith( value, '-NOTFOUND' ) ) then
+		return true
+	end
+
+	return false
+end
+
 function m.isTrue( value )
 	if( value == nil ) then
 		return false
 	end
 
 	local t = type( value )
-
 	if( t == 'boolean' ) then
 		return value
 	elseif( t == 'number' ) then
 		return ( value ~= 0 )
 	elseif( t == 'string' ) then
 		if( m.isStringLiteral( value ) ) then
-			return true
-		elseif( ( value == m.ON ) or ( value == m.YES ) or ( value == m.TRUE ) or ( value == m.Y ) ) then
-			return true
-		elseif( ( value == m.OFF ) or ( value == m.NO ) or ( value == m.FALSE ) or ( value == m.N ) or ( value == m.IGNORE ) or ( value == m.NOTFOUND ) ) then
-			return false
-		elseif( tonumber( value ) ~= nil ) then
-			return ( tonumber( value ) ~= 0 )
+			-- The importer should be engineered in such a way that commands don't have to worry about string literals
+			p.error( 'a string literal cannot be true or false' )
 		end
 
-		return m.isTrue( m.expandVariable( value ) )
+		if( m.isTrueConstant( value ) ) then
+			return true
+		elseif( m.isFalseConstant( value ) ) then
+			return false
+		else
+			local valueDeref = m.dereference( value )
+			if( valueDeref ~= nil ) then
+				-- A dereferenced variable is true as long as its value is not a false constant
+				return not m.isFalseConstant( valueDeref )
+			else
+				return false
+			end
+		end
+		return false
 	end
 
 	p.error( '"%s" is not an eligible type for a CMake constant', t )
@@ -55,13 +102,13 @@ function m.isTrue( value )
 	return false
 end
 
-function m.resolveVariables( str )
-	-- Global variables
+function m.expandVariables( str )
+	-- Scope variables
 	repeat
 		local st, en = string.find( str, '${%S+}' )
 
 		if( st ~= nil ) then
-			local var   = m.resolveVariables( string.sub( str, st + 2, en - 1 ) )
+			local var   = m.expandVariables( string.sub( str, st + 2, en - 1 ) )
 			local scope = m.scope.current()
 			local value
 
@@ -71,7 +118,7 @@ function m.resolveVariables( str )
 				scope = scope.parent
 			end
 
-			-- Find variable in cache entries
+			-- Variable may be an implicit cache entry
 			if( value == nil ) then
 				value = m.cache_entries[ var ]
 			end
@@ -85,7 +132,7 @@ function m.resolveVariables( str )
 		local st, en = string.find( str, '$ENV{%S+}' )
 
 		if( st ~= nil ) then
-			local var   = m.resolveVariables( string.sub( str, st + 5, en - 1 ) )
+			local var   = m.expandVariables( string.sub( str, st + 5, en - 1 ) )
 			local value = os.getenv( var ) or ''
 			str         = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
 		end
@@ -96,7 +143,7 @@ function m.resolveVariables( str )
 		local st, en = string.find( str, '$CACHE{%S+}' )
 
 		if( st ~= nil ) then
-			local var   = m.resolveVariables( string.sub( str, st + 5, en - 1 ) )
+			local var   = m.expandVariables( string.sub( str, st + 5, en - 1 ) )
 			local value = m.cache_entries[ var ] or ''
 
 			str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
@@ -106,17 +153,7 @@ function m.resolveVariables( str )
 	return str
 end
 
-function m.expandVariable( var, defaultValue )
-	local cacheVar = string.match( var, 'CACHE{(.+)}' )
-	if( cacheVar ) then
-		return m.cache_entries[ cacheVar ]
-	end
-
-	local envVar = string.match( var, 'ENV{(.+)}' )
-	if( envVar ) then
-		return os.getenv( envVar )
-	end
-
+function m.dereference( var )
 	local scope = m.scope.current()
 	while( scope ~= nil ) do
 		local scopeVar = scope.variables[ var ]
@@ -127,7 +164,7 @@ function m.expandVariable( var, defaultValue )
 		scope = scope.parent
 	end
 
-	return m.cache_entries[ var ] or defaultValue or m.NOTFOUND
+	return m.cache_entries[ var ]
 end
 
 function m.isStringLiteral( str )

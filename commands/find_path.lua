@@ -25,11 +25,11 @@ local function findPath( cmd, keyword, extension )
 	local subDirs            = { }
 	local docString          = ''
 	local isRequired         = false
-	local searchPackageRoot  = m.isTrue( m.expandVariable( 'CMAKE_FIND_USE_PACKAGE_ROOT_PATH', iif( m.currentPackage ~= nil, m.TRUE, m.FALSE ) ) )
-	local searchCMakePath    = m.isTrue( m.expandVariable( 'CMAKE_FIND_USE_CMAKE_PATH', m.TRUE ) )
-	local searchCMakeEnvPath = m.isTrue( m.expandVariable( 'CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH', m.TRUE ) )
-	local searchSysEnvPath   = m.isTrue( m.expandVariable( 'CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH', m.TRUE ) )
-	local searchCMakeSysPath = m.isTrue( m.expandVariable( 'CMAKE_FIND_USE_CMAKE_SYSTEM_PATH', m.TRUE ) )
+	local searchPackageRoot  = m.isTrue( m.dereference( 'CMAKE_FIND_USE_PACKAGE_ROOT_PATH' ) or iif( m.currentPackage ~= nil, m.TRUE, m.FALSE ) )
+	local searchCMakePath    = m.isTrue( m.dereference( 'CMAKE_FIND_USE_CMAKE_PATH' ) or m.TRUE )
+	local searchCMakeEnvPath = m.isTrue( m.dereference( 'CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH' ) or m.TRUE )
+	local searchSysEnvPath   = m.isTrue( m.dereference( 'CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH' ) or m.TRUE )
+	local searchCMakeSysPath = m.isTrue( m.dereference( 'CMAKE_FIND_USE_CMAKE_SYSTEM_PATH' ) or m.TRUE )
 	local useFindRootPathVar = true
 	local searchOnlyRoots    = false
 
@@ -147,15 +147,15 @@ local function findPath( cmd, keyword, extension )
 	end
 
 	if( searchCMakePath ) then
-		local libraryArchitecture = m.expandVariable( 'CMAKE_LIBRARY_ARCHITECTURE' )
-		local prefixPath          = m.expandVariable( 'CMAKE_PREFIX_PATH' )
-		local prefixes            = string.explode( prefixPath, ';' )
+		local libraryArchitecture = m.dereference( 'CMAKE_LIBRARY_ARCHITECTURE' )
+		local prefixPath          = m.dereference( 'CMAKE_PREFIX_PATH' )
+		local prefixes            = prefixPath and string.explode( prefixPath, ';' ) or { }
 
 		for _,prefix in ipairs( prefixes ) do
 			local dir = path.join( prefix, keywordDirs[ keyword ] )
 
 			for _,name in ipairs( names ) do
-				if( libraryArchitecture ~= m.NOTFOUND ) then
+				if( libraryArchitecture ) then
 					local archDir  = path.join( dir, libraryArchitecture )
 					local filePath = path.join( archDir, name )
 
@@ -176,9 +176,8 @@ local function findPath( cmd, keyword, extension )
 			end
 		end
 
-		local keyPath = m.expandVariable( 'CMAKE_' .. keyword .. '_PATH' )
-
-		if( keyPath ~= m.NOTFOUND ) then
+		local keyPath = m.dereference( 'CMAKE_' .. keyword .. '_PATH' )
+		if( keyPath ) then
 			local paths = string.explode( keyPath, ';' )
 
 			for _,pathh in ipairs( paths ) do
@@ -194,9 +193,8 @@ local function findPath( cmd, keyword, extension )
 			end
 		end
 
-		local frameworkPath = m.expandVariable( 'CMAKE_FRAMEWORK_PATH' )
-
-		if( frameworkPath ~= m.NOTFOUND ) then
+		local frameworkPath = m.dereference( 'CMAKE_FRAMEWORK_PATH' )
+		if( frameworkPath ) then
 			local paths = string.explode( frameworkPath, ';' )
 
 			for _,pathh in ipairs( paths ) do
@@ -244,7 +242,6 @@ local function findPath( cmd, keyword, extension )
 		end
 
 		local includePath = os.getenv( 'CMAKE_INCLUDE_PATH' )
-
 		if( includePath ) then
 			local paths = string.explode( includePath, separator )
 
@@ -262,7 +259,6 @@ local function findPath( cmd, keyword, extension )
 		end
 
 		local frameworkPath = os.getenv( 'CMAKE_FRAMEWORK_PATH' )
-
 		if( frameworkPath ) then
 			local paths = string.explode( frameworkPath, separator )
 

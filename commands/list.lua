@@ -3,7 +3,12 @@ local m           = p.extensions.impcmake
 local subcommands = { }
 
 local function getList( listVar )
-	return string.explode( m.expandVariable( listVar ), ';' )
+	local listValue = m.dereference( listVar )
+	if( listValue ) then
+		return string.explode( listValue, ';' )
+	else
+		return { }
+	end
 end
 
 -- TODO: LENGTH
@@ -32,7 +37,6 @@ end
 function subcommands.FIND( listVar, value, outVar )
 	local scope = m.scope.current()
 	local list  = getList( listVar )
-	value       = m.resolveVariables( value )
 
 	for i,item in ipairs( list ) do
 		if( item == value ) then

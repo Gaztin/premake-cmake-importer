@@ -21,14 +21,15 @@ function m.commands.include( cmd )
 		end
 	end
 
-	local filePaths = {
+	local cmakeModulePath = m.dereference( 'CMAKE_MODULE_PATH' )
+	local filePaths       = {
 		file,
-		table.unpack( string.explode( m.expandVariable( 'CMAKE_MODULE_PATH' ), ';' ) ),
+		table.unpack( string.explode( cmakeModulePath or '', ';' ) ),
 		path.join( m.modules.getCacheDir(), file ) .. '.cmake',
 	}
 
 	-- If we are in the module directory, search there before in designated directory
-	local currentListDir      = m.expandVariable( 'CMAKE_CURRENT_LIST_DIR' )
+	local currentListDir      = m.dereference( 'CMAKE_CURRENT_LIST_DIR' ) or os.getcwd()
 	local potentialMarkerPath = path.join( currentListDir, m.modules.getCacheMarkerPath() )
 	if( os.isfile( potentialMarkerPath ) ) then
 		local modulePath = table.remove( filePaths, #filePaths )

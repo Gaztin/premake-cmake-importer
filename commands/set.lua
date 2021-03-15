@@ -39,7 +39,7 @@ function m.commands.set( cmd )
 			end
 
 		else
-			table.insert( values, m.resolveVariables( arguments[ i ] ) )
+			table.insert( values, m.expandVariables( arguments[ i ] ) )
 		end
 	end
 
