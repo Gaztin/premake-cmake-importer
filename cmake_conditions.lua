@@ -3,14 +3,51 @@ local m      = p.extensions.impcmake
 m.conditions = { }
 
 local unaryOperators = {
-	EXISTS = function( rhs )
-		p.warn( 'conditions: EXISTS not supported!' )
-	end,
-
 	COMMAND = function( rhs )
 		p.warn( 'conditions: COMMAND not supported!' )
+		return false
 	end,
 
+	POLICY = function( rhs )
+		p.warn( 'conditions: POLICY not supported!' )
+		return false
+	end,
+
+	TARGET = function( rhs )
+		p.warn( 'conditions: TARGET not supported!' )
+		return false
+	end,
+
+	TEST = function( rhs )
+		p.warn( 'conditions: TEST not supported!' )
+		return false
+	end,
+
+	EXISTS = function( rhs )
+		p.warn( 'conditions: EXISTS not supported!' )
+		return false
+	end,
+
+	POLICY = function( rhs )
+		p.warn( 'conditions: POLICY not supported!' )
+		return false
+	end,
+
+	IS_DIRECTORY = function( rhs )
+		p.warn( 'conditions: IS_DIRECTORY not supported!' )
+		return false
+	end,
+
+	IS_SYMLINK = function( rhs )
+		p.warn( 'conditions: IS_SYMLINK not supported!' )
+		return false
+	end,
+
+	IS_ABSOLUTE = function( rhs )
+		p.warn( 'conditions: IS_ABSOLUTE not supported!' )
+		return false
+	end,
+	
 	DEFINED = function( rhs )
 		local cacheVar = string.match( rhs, 'CACHE{(.+)}' )
 		if( cacheVar ) then
@@ -27,28 +64,104 @@ local unaryOperators = {
 }
 
 local binaryOperators = {
-	EQUAL                 = function( lhs, rhs )                                                     return lhs == rhs end,
-	LESS                  = function( lhs, rhs )                                                     return lhs <  rhs end,
-	LESS_EQUAL            = function( lhs, rhs )                                                     return lhs <= rhs end,
-	GREATER               = function( lhs, rhs )                                                     return lhs >  rhs end,
-	GREATER_EQUAL         = function( lhs, rhs )                                                     return lhs >= rhs end,
-	STREQUAL              = function( lhs, rhs ) p.warn( 'STREQUAL(%s, %s)', lhs, rhs )              return lhs == rhs end,
-	STRLESS               = function( lhs, rhs ) p.warn( 'STRLESS(%s, %s)', lhs, rhs )               return lhs <  rhs end,
-	STRLESS_EQUAL         = function( lhs, rhs ) p.warn( 'STRLESS_EQUAL(%s, %s)', lhs, rhs )         return lhs <= rhs end,
-	STRGREATER            = function( lhs, rhs ) p.warn( 'STRGREATER(%s, %s)', lhs, rhs )            return lhs >  rhs end,
-	STRGREATER_EQUAL      = function( lhs, rhs ) p.warn( 'STRGREATER_EQUAL(%s, %s)', lhs, rhs )      return lhs >= rhs end,
-	VERSION_EQUAL         = function( lhs, rhs ) p.warn( 'VERSION_EQUAL(%s, %s)', lhs, rhs )         return lhs == rhs end,
-	VERSION_LESS          = function( lhs, rhs ) p.warn( 'VERSION_LESS(%s, %s)', lhs, rhs )          return lhs <  rhs end,
-	VERSION_LESS_EQUAL    = function( lhs, rhs ) p.warn( 'VERSION_LESS_EQUAL(%s, %s)', lhs, rhs )    return lhs <= rhs end,
-	VERSION_GREATER       = function( lhs, rhs ) p.warn( 'VERSION_GREATER(%s, %s)', lhs, rhs )       return lhs >  rhs end,
-	VERSION_GREATER_EQUAL = function( lhs, rhs ) p.warn( 'VERSION_GREATER_EQUAL(%s, %s)', lhs, rhs ) return lhs >= rhs end,
-	MATCHES               = function( lhs, rhs ) p.warn( 'MATCHES(%s, %s)', lhs, rhs )               return lhs == rhs end,
+	IS_NEWER_THAN = function( lhs, rhs )
+		p.warn( 'conditions: %s IS_NEWER_THAN %s', lhs, rhs )
+		return false
+	end,
+
+	MATCHES = function( lhs, rhs )
+		p.warn( 'conditions: %s MATCHES %s', lhs, rhs )
+		return lhs == rhs
+	end,
+
+	LESS = function( lhs, rhs )
+		return lhs < rhs
+	end,
+
+	GREATER = function( lhs, rhs )
+		return lhs > rhs
+	end,
+
+	EQUAL = function( lhs, rhs )
+		return lhs == rhs
+	end,
+
+	LESS_EQUAL = function( lhs, rhs )
+		return lhs <= rhs
+	end,
+
+	GREATER_EQUAL = function( lhs, rhs )
+		return lhs >= rhs
+	end,
+
+	STRLESS = function( lhs, rhs )
+		p.warn( 'conditions: %s STRLESS %s', lhs, rhs )
+		return lhs < rhs
+	end,
+
+	STRGREATER = function( lhs, rhs )
+		p.warn( 'conditions: %s STRGREATER %s', lhs, rhs )
+		return lhs > rhs
+	end,
+
+	STREQUAL = function( lhs, rhs )
+		p.warn( 'conditions: %s STREQUAL %s', lhs, rhs )
+		return lhs == rhs
+	end,
+
+	STRLESS_EQUAL = function( lhs, rhs )
+		p.warn( 'conditions: %s STRLESS_EQUAL %s', lhs, rhs )
+		return lhs <= rhs
+	end,
+
+	STRGREATER_EQUAL = function( lhs, rhs )
+		p.warn( 'conditions: %s STRGREATER_EQUAL %s', lhs, rhs )
+		return lhs >= rhs
+	end,
+
+	VERSION_LESS = function( lhs, rhs )
+		p.warn( 'conditions: %s VERSION_LESS %s', lhs, rhs )
+		return lhs <  rhs
+	end,
+
+	VERSION_GREATER = function( lhs, rhs )
+		p.warn( 'conditions: %s VERSION_GREATER %s', lhs, rhs )
+		return lhs >  rhs
+	end,
+
+	VERSION_EQUAL = function( lhs, rhs )
+		p.warn( 'conditions: %s VERSION_EQUAL %s', lhs, rhs )
+		return lhs == rhs
+	end,
+
+	VERSION_LESS_EQUAL = function( lhs, rhs )
+		p.warn( 'conditions: %s VERSION_LESS_EQUAL %s', lhs, rhs )
+		return lhs <= rhs
+	end,
+
+	VERSION_GREATER_EQUAL = function( lhs, rhs )
+		p.warn( 'conditions: %s VERSION_GREATER_EQUAL %s', lhs, rhs )
+		return lhs >= rhs
+	end,
+
+	IN_LIST = function( lhs, rhs )
+		p.warn( 'conditions: %s IN_LIST %s', lhs, rhs )
+		return false
+	end,
 }
 
 local booleanOperators = {
-	NOT = function( rhs )      return not rhs end,
-	AND = function( lhs, rhs ) return lhs and rhs end,
-	OR  = function( lhs, rhs ) return lhs or rhs end,
+	NOT = function( rhs )
+		return not rhs
+	end,
+
+	AND = function( lhs, rhs )
+		return lhs and rhs
+	end,
+
+	OR = function( lhs, rhs )
+		return lhs or rhs
+	end,
 }
 
 function m.conditions.evalExpression( str )
