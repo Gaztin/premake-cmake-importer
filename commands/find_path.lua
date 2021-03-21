@@ -37,7 +37,12 @@ local function findPath( cmd, keyword, extension )
 	if( arguments[ 1 ] == 'NAMES' ) then
 		table.remove( arguments, 1 )
 		while( not table.contains( possibleOptions, arguments[ 1 ] ) ) do
-			table.insert( names, table.remove( arguments, 1 ) .. extension )
+			local arg        = table.remove( arguments, 1 )
+			local namesInArg = m.splitTerms( arg )
+
+			for _,name in ipairs( namesInArg ) do
+				table.insert( names, name .. extension )
+			end
 		end
 	else
 		table.insert( names, table.remove( arguments, 1 ) .. extension )
@@ -291,7 +296,6 @@ local function findPath( cmd, keyword, extension )
 	if( searchSysEnvPath ) then
 		local pathEnv      = os.getenv( 'PATH' )
 		local pathEnvPaths = string.explode( pathEnv, m.ENV_SEPARATOR )
-
 		for _,pathEnvPath in ipairs( pathEnvPaths ) do
 			for _,name in ipairs( names ) do
 				local filePath = path.join( pathEnvPath, name )

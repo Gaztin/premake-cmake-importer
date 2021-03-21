@@ -10,13 +10,14 @@ function m.splitTerms( text )
 
 		if( leftQuotationMark and leftQuotationMark == head ) then
 			local rightQuotationMark = string.find( text, '"',  leftQuotationMark  + 1, true )
-			local term               = string.sub( text, leftQuotationMark, rightQuotationMark )
+			local term               = string.sub( text, leftQuotationMark + 1, rightQuotationMark - 1 )
 			head                     = string.find( text, '%S', rightQuotationMark + 1, false )
 			table.insert( terms, term )
 		else
 			local nextSpace = string.find( text, '%s', head )
 			local tail      = nextSpace and ( nextSpace - 1 )
 			local term      = string.sub( text, head, tail )
+			term            = tonumber( term ) or term
 			head            = tail and string.find( text, '%S', tail + 1, false )
 			table.insert( terms, term )
 		end

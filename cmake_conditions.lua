@@ -71,96 +71,128 @@ local binaryOperators = {
 
 	MATCHES = function( lhs, rhs )
 		p.warn( 'conditions: %s MATCHES %s', lhs, rhs )
-		return lhs == rhs
+		return false
 	end,
 
 	LESS = function( lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs < rhs
 	end,
 
 	GREATER = function( lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs > rhs
 	end,
 
 	EQUAL = function( lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs == rhs
 	end,
 
 	LESS_EQUAL = function( lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs <= rhs
 	end,
 
 	GREATER_EQUAL = function( lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs >= rhs
 	end,
 
 	STRLESS = function( lhs, rhs )
 		p.warn( 'conditions: %s STRLESS %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs < rhs
 	end,
 
 	STRGREATER = function( lhs, rhs )
 		p.warn( 'conditions: %s STRGREATER %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs > rhs
 	end,
 
 	STREQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s STREQUAL %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs == rhs
 	end,
 
 	STRLESS_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s STRLESS_EQUAL %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs <= rhs
 	end,
 
 	STRGREATER_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s STRGREATER_EQUAL %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs >= rhs
 	end,
 
 	VERSION_LESS = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_LESS %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs <  rhs
 	end,
 
 	VERSION_GREATER = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_GREATER %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs >  rhs
 	end,
 
 	VERSION_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_EQUAL %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs == rhs
 	end,
 
 	VERSION_LESS_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_LESS_EQUAL %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs <= rhs
 	end,
 
 	VERSION_GREATER_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_GREATER_EQUAL %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return lhs >= rhs
 	end,
 
 	IN_LIST = function( lhs, rhs )
 		p.warn( 'conditions: %s IN_LIST %s', lhs, rhs )
+		lhs = m.dereference( lhs ) or lhs
+		rhs = m.dereference( rhs ) or rhs
 		return false
 	end,
 }
 
 local booleanOperators = {
 	NOT = function( rhs )
-		return not rhs
+		return not m.isTrue( rhs )
 	end,
 
 	AND = function( lhs, rhs )
-		return lhs and rhs
+		return m.isTrue( lhs ) and m.isTrue( rhs )
 	end,
 
 	OR = function( lhs, rhs )
-		return lhs or rhs
+		return m.isTrue( lhs ) or m.isTrue( rhs )
 	end,
 }
 
@@ -242,5 +274,5 @@ function m.conditions.evalExpression( str )
 		p.error( str, #terms )
 	end
 
-	return terms[ 1 ]
+	return m.isTrue( terms[ 1 ] )
 end
