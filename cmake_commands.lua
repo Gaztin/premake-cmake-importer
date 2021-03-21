@@ -26,23 +26,9 @@ function m.executeCommand( cmd )
 			-- Resolve variables and remove quotation marks before invoking command
 			cmd           = table.deepcopy( cmd )
 			cmd.argString = m.expandVariables( cmd.argString )
-
-			local i = 1
-			repeat
-				cmd.arguments[ i ] = m.expandVariables( cmd.arguments[ i ] )
-				-- After resolving, ${my_var} may have been expanded into 'Foo Bar' which should
-				-- replace the previous argument as two new arguments
-				local splitArguments = m.splitTerms( cmd.arguments[ i ] )
-				if( #splitArguments > 1 ) then
-					table.remove( cmd.arguments, i )
-					for _,arg in ipairs( splitArguments ) do
-						table.insert( cmd.arguments, i, arg )
-						i = i + 1
-					end
-				end
-
-				i = i + 1
-			until( i > #cmd.arguments )
+			for i, arg in ipairs( cmd.arguments ) do
+				cmd.arguments[ i ] = m.expandVariables( arg )
+			end
 
 			m.indent()
 
