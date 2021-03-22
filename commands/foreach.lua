@@ -32,7 +32,7 @@ local function endforeach( commands, data )
 		end
 
 		if( i < #data.items and not shouldBreak ) then
-			verbosef( m.indentation( -1 ) .. 'nextforeach (%s = %d)', data.loopVar, i )
+			m.verbose( 'nextforeach (' .. data.loopVar .. ' = ' .. i .. ')', -1 )
 		end
 
 		if( shouldBreak ) then
@@ -41,7 +41,7 @@ local function endforeach( commands, data )
 	end
 
 	m.unindent()
-	verbosef( m.indentation() .. 'endforeach' )
+	m.verbose( 'endforeach' )
 
 	m.commands[ 'break' ]           = prevBreak
 	m.commands[ 'continue' ]        = prevContinue

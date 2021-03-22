@@ -14,11 +14,11 @@ local function endif( commands, data )
 			end
 
 			if( nestLevel == 0 and command.name == 'elseif' ) then
-				verbosef( m.indentation( -1 ) .. 'elseif (%s)', command.argString )
+				m.verbose( 'elseif (' .. command.argString .. ')', -1 )
 				data.handled   = data.handled or data.lastCheck
 				data.lastCheck = m.conditions.evalExpression( command.argString )
 			elseif( nestLevel == 0 and command.name == 'else' ) then
-				verbosef( m.indentation( -1 ) .. 'else' )
+				m.verbose( 'else', -1 )
 				data.handled   = data.handled or data.lastCheck
 				data.lastCheck = not data.lastCheck
 			elseif( data.lastCheck ) then
@@ -28,7 +28,7 @@ local function endif( commands, data )
 	end
 
 	m.unindent()
-	verbosef( m.indentation() .. 'endif' )
+	m.verbose( 'endif' )
 end
 
 m.commands[ 'if' ] = function( cmd )
