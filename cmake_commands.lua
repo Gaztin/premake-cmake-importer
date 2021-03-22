@@ -3,10 +3,6 @@ local m      = p.extensions.impcmake
 local indent = 0
 m.commands   = { }
 
-function m.indentation( offset )
-	return string.rep( '  ', indent + ( offset or 0 ) )
-end
-
 function m.indent()
 	indent = indent + 1
 end
@@ -15,13 +11,30 @@ function m.unindent()
 	indent = indent - 1
 end
 
+local function getScopeDepthString()
+	local scope = m.scope.current()
+	local level = 0
+
+	while( scope ) do
+		scope = scope.parent
+		level = level + 1
+	end
+
+	return string.format( 'L%X ', level )
+end
+
+function m.verbose( str, offset )
+	local indentation = string.rep( '  ', indent + ( offset or 0 ) )
+	verbosef( getScopeDepthString() .. indentation .. str )
+end
+
 function m.executeCommand( cmd )
 	if( m.groups.recording ) then
 		m.groups.record( cmd )
 	else
 		local callback = m.commands[ cmd.name ]
 		if( callback ) then
-			verbosef( m.indentation() .. '%s (%s)', cmd.name, cmd.argString )
+			m.verbose( cmd.name .. '(' .. cmd.argString .. ')' )
 
 			-- Resolve variables and remove quotation marks before invoking command
 			cmd           = table.deepcopy( cmd )

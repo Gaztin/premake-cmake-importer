@@ -20,7 +20,7 @@ local function endwhile( commands, data )
 	local iterations = 0
 	while( m.conditions.evalExpression( data.expression ) ) do
 		if( iterations > 0 ) then
-			verbosef( m.indentation( -1 ) .. 'nextwhile' )
+			m.verbose( 'nextwhile' )
 		end
 
 		for i,command in ipairs( commands ) do
@@ -40,7 +40,7 @@ local function endwhile( commands, data )
 	end
 
 	m.unindent()
-	verbosef( m.indentation() .. 'endwhile' )
+	m.verbose( 'endwhile' )
 
 	m.commands[ 'break' ]    = prevBreak
 	m.commands[ 'continue' ] = prevContinue
