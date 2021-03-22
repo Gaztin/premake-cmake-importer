@@ -119,10 +119,9 @@ local binaryOperators = {
 	end,
 
 	STREQUAL = function( lhs, rhs )
-		p.warn( 'conditions: %s STREQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return false
+		return type( lhs ) == 'string' and type( rhs ) == 'string' and lhs == rhs
 	end,
 
 	STRLESS_EQUAL = function( lhs, rhs )
