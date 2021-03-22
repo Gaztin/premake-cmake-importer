@@ -37,8 +37,7 @@ function m.executeCommand( cmd )
 			m.verbose( cmd.name .. '(' .. cmd.argString .. ')' )
 
 			-- Resolve variables and remove quotation marks before invoking command
-			cmd           = table.deepcopy( cmd )
-			cmd.argString = m.expandVariables( cmd.argString )
+			cmd = table.deepcopy( cmd )
 			for i, arg in ipairs( cmd.arguments ) do
 				cmd.arguments[ i ] = m.expandVariables( arg )
 			end
