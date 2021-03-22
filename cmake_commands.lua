@@ -20,7 +20,7 @@ local function getScopeDepthString()
 		level = level + 1
 	end
 
-	return string.format( 'L%X ', level )
+	return string.format( 'L%X| ', level )
 end
 
 function m.verbose( str, offset )
