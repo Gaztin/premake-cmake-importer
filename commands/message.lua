@@ -1,36 +1,35 @@
 local p = premake
 local m = p.extensions.impcmake
 
+local modes = {
+	FATAL_ERROR    = { color = term.red,        hint = 'Fatal error' },
+	SEND_ERROR     = { color = term.red,        hint = 'Send error' },
+	WARNING        = { color = term.yellow,     hint = 'Warning' },
+	AUTHOR_WARNING = { color = term.yellow,     hint = 'Author warning' },
+	DEPRECATION    = { color = term.purple,     hint = 'Deprecation' },
+	NOTICE         = { color = term.cyan,       hint = 'Notice' },
+	STATUS         = { color = term.white,      hint = 'Status' },
+	VERBOSE        = { color = term.gray,       hint = 'Verbose' },
+	DEBUG          = { color = term.gray,       hint = 'Debug' },
+	TRACE          = { color = term.lightGreen, hint = 'Trace' },
+	CHECK_START    = { color = term.lightCyan,  hint = 'Check start' },
+	CHECK_PASS     = { color = term.lightCyan,  hint = 'Check pass' },
+	CHECK_FAIL     = { color = term.lightCyan,  hint = 'Check fail' },
+	__default      = { color = nil,             hint = nil }
+}
+
 function m.commands.message( cmd )
-	local arguments    = cmd.arguments
-	local allowedModes = { 'FATAL_ERROR', 'SEND_ERROR', 'WARNING',     'AUTHOR_WARNING',
-	                       'DEPRECATION', 'NOTICE',     'STATUS',      'VERBOSE',
-	                       'DEBUG',       'TRACE',      'CHECK_START', 'CHECK_PASS',
-	                       'CHECK_FAIL' }
+	local mode  = modes[ cmd.arguments[ 1 ] ]
+	local start = mode and 2 or 1
+	mode        = mode or modes.__default
 
-	if( #arguments > 1 ) then
-		local mode = arguments[ 1 ]
-		local msg  = arguments[ 2 ]
-
-		if( mode == 'FATAL_ERROR' or mode == 'SEND_ERROR' ) then
-			term.pushColor( term.red )
-		elseif( mode == 'WARNING' or mode == 'AUTHOR_WARNING' ) then
-			term.pushColor( term.yellow )
-		elseif( mode == 'DEPRECATION' ) then
-			term.pushColor( term.cyan )
-		elseif( mode == 'NOTICE' or mode == 'STATUS' or mode == 'VERBOSE' or mode == 'DEBUG' or mode == 'TRACE' or mode == 'CHECK_START' or mode == 'CHECK_PASS' or mode == 'CHECK_FAIL' ) then
-			term.pushColor( term.white )
+	for i = start, #cmd.arguments do
+		term.pushColor( mode.color )
+		if( mode.hint ) then
+			print( '[CMake] ' .. mode.hint .. ': ' .. cmd.arguments[ i ] )
 		else
-			p.warn( 'Unhandled message mode "%s"', mode )
-			term.pushColor( term.white )
+			print( '[CMake]:' .. cmd.arguments[ i ] )
 		end
-
-		printf( '[CMake]<%s>: %s', mode, msg )
 		term.popColor()
-
-	else
-		local msg = arguments[ 1 ]
-
-		printf( '[CMake]: %s', msg )
 	end
 end
