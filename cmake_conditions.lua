@@ -108,70 +108,70 @@ local binaryOperators = {
 		p.warn( 'conditions: %s STRLESS %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs < rhs
+		return false
 	end,
 
 	STRGREATER = function( lhs, rhs )
 		p.warn( 'conditions: %s STRGREATER %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs > rhs
+		return false
 	end,
 
 	STREQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s STREQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs == rhs
+		return false
 	end,
 
 	STRLESS_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s STRLESS_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs <= rhs
+		return false
 	end,
 
 	STRGREATER_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s STRGREATER_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs >= rhs
+		return false
 	end,
 
 	VERSION_LESS = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_LESS %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs <  rhs
+		return false
 	end,
 
 	VERSION_GREATER = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_GREATER %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs >  rhs
+		return false
 	end,
 
 	VERSION_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs == rhs
+		return false
 	end,
 
 	VERSION_LESS_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_LESS_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs <= rhs
+		return false
 	end,
 
 	VERSION_GREATER_EQUAL = function( lhs, rhs )
 		p.warn( 'conditions: %s VERSION_GREATER_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return lhs >= rhs
+		return false
 	end,
 
 	IN_LIST = function( lhs, rhs )
