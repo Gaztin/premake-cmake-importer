@@ -208,6 +208,12 @@ function m.conditions.evalExpression( str )
 	-- Turn expression: (NOT ${var1} EQUAL "Foo Bar") into array: {NOT, ${var1}, EQUAL, "Foo Bar"}
 	local terms = m.splitTerms( str )
 
+	-- Expand variables and convert numbers
+	for i=1,#terms do
+		terms[ i ] = m.expandVariables( terms[ i ] )
+		terms[ i ] = tonumber( terms[ i ] ) or terms[ i ]
+	end
+
 	-- Unary operations
 	local i = 1
 	while( i < #terms ) do
