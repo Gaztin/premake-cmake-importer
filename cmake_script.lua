@@ -118,7 +118,6 @@ function m.addSystemVariables()
 	local host    = os.host()
 	local target  = os.target()
 	local sysinfo = os.getversion()
-	local action  = _ACTION
 	local scope   = m.scope.current()
 
 	-- Constants
@@ -182,13 +181,30 @@ function m.addSystemVariables()
 
 	-- Generators
 
+	local generators = {
+		xcode4   = 'Xcode',
+		codelite = 'CodeLite',
+		gmake    = 'Unix Makefiles',
+		gmake2   = 'Unix Makefiles',
+		vs2005   = 'Visual Studio 8 2005',
+		vs2008   = 'Visual Studio 9 2008',
+		vs2010   = 'Visual Studio 10 2010',
+		vs2012   = 'Visual Studio 11 2012',
+		vs2013   = 'Visual Studio 12 2013',
+		vs2015   = 'Visual Studio 14 2015',
+		vs2017   = 'Visual Studio 15 2017',
+		vs2019   = 'Visual Studio 16 2019',
+	}
+
+	scope.variables[ 'CMAKE_GENERATOR' ] = generators[ _ACTION ] or 'Unknown'
+	
 	-- TODO: MSVC*
 	-- TODO: MSYS
 	-- TODO: WINCE
 	-- TODO: WINDOWS_PHONE
 	-- TODO: WINDOWS_STORE
 
-	if( action == 'Xcode4' ) then
+	if( _ACTION == 'xcode4' ) then
 		local xcodeVersion = os.outputof( '/usr/bin/xcodebuild -version' )
 
 		scope.variables[ 'XCODE' ]         = m.TRUE
