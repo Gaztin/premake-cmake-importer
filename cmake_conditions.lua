@@ -69,9 +69,9 @@ local binaryOperators = {
 		return false
 	end,
 
-	MATCHES = function( lhs, rhs )
-		p.warn( 'conditions: %s MATCHES %s', lhs, rhs )
-		return false
+	MATCHES = function( lhs, regex )
+		lhs = m.dereference( lhs ) or lhs
+		return string.find( lhs, regex ) ~= nil
 	end,
 
 	LESS = function( lhs, rhs )
