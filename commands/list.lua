@@ -40,7 +40,7 @@ function subcommands.FIND( listVar, value, outVar )
 
 	for i,item in ipairs( list ) do
 		if( item == value ) then
-			scope.variables[ outVar ] = i
+			scope.variables[ outVar ] = i - 1
 			return
 		end
 	end
