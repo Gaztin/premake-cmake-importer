@@ -492,6 +492,27 @@ function m.commands.find_package( cmd )
 				end
 			end
 
+			-- Set up scope
+			local scope = m.scope.current()
+			scope.variables[ 'CMAKE_FIND_PACKAGE_NAME'            ] = packageName
+			scope.variables[ packageName .. '_FIND_REQUIRED'      ] = required and m.TRUE or m.FALSE
+			scope.variables[ packageName .. '_FIND_QUIETLY'       ] = quiet and m.TRUE or m.FALSE
+			scope.variables[ packageName .. '_FIND_VERSION'       ] = version or m.NOTFOUND
+			scope.variables[ packageName .. '_FIND_VERSION_MAJOR' ] = verNumbers[ 1 ] or m.NOTFOUND
+			scope.variables[ packageName .. '_FIND_VERSION_MINOR' ] = verNumbers[ 2 ] or m.NOTFOUND
+			scope.variables[ packageName .. '_FIND_VERSION_PATCH' ] = verNumbers[ 3 ] or m.NOTFOUND
+			scope.variables[ packageName .. '_FIND_VERSION_TWEAK' ] = verNumbers[ 4 ] or m.NOTFOUND
+			scope.variables[ packageName .. '_FIND_VERSION_COUNT' ] = verCount
+			scope.variables[ packageName .. '_FIND_VERSION_EXACT' ] = exact and m.TRUE or m.FALSE
+			scope.variables[ packageName .. '_FIND_COMPONENTS'    ] = table.implode( table.join( requiredComponents, optionalComponents ), '"', '"', ' ' )
+
+			for i,requiredComponent in ipairs( requiredComponents ) do
+				scope.variables[ packageName .. '_FIND_REQUIRED_' .. requiredComponent ] = m.TRUE
+			end
+			for i,optionalComponent in ipairs( optionalComponents ) do
+				scope.variables[ packageName .. '_FIND_REQUIRED_' .. optionalComponent ] = m.FALSE
+			end
+
 			-- Load module script
 			m.loadScript( filePath )
 
