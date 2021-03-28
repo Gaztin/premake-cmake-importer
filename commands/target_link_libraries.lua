@@ -40,6 +40,12 @@ function m.commands.target_link_libraries( cmd )
 							sysincludedirs { dir }
 						end
 					end
+					if( prj._cmake.publiclibs ) then
+						for _,lib in ipairs( prj._cmake.publiclibs ) do
+							libdirs { path.getdirectory( lib ) }
+							links { path.getname( lib ) }
+						end
+					end
 				end
 
 				links { targetName }
