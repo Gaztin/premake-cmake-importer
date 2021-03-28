@@ -98,12 +98,17 @@ function m.isTrue( value )
 end
 
 function m.expandVariables( str )
+	if( type( str ) ~= 'string' ) then
+		return str
+	end
+	
 	-- Scope variables
 	repeat
-		local st, en = string.find( str, '${%S+}' )
+		local st = str:find( '${', 1, true )
 
 		if( st ~= nil ) then
-			local var   = m.expandVariables( string.sub( str, st + 2, en - 1 ) )
+			local en    = str:find( '}', st + 2, true )
+			local var   = m.expandVariables( str:sub( st + 2, en - 1 ) )
 			local scope = m.scope.current()
 			local value
 
@@ -118,27 +123,29 @@ function m.expandVariables( str )
 				value = m.cache_entries[ var ]
 			end
 
-			str = string.sub( str, 1, st - 1 ) .. ( value or '' ) .. string.sub( str, en + 1 )
+			str = str:sub( 1, st - 1 ) .. ( value or '' ) .. str:sub( en + 1 )
 		end
 	until( st == nil )
 
 	-- Environment variables
 	repeat
-		local st, en = string.find( str, '$ENV{%S+}' )
+		local st = str:find( '$ENV{', 1, true )
 
 		if( st ~= nil ) then
-			local var   = m.expandVariables( string.sub( str, st + 5, en - 1 ) )
+			local en    = str:find( '}', st + 5, true )
+			local var   = m.expandVariables( str:sub( st + 5, en - 1 ) )
 			local value = os.getenv( var ) or ''
-			str         = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
+			str         = str:sub( 1, st - 1 ) .. value .. str:sub( en + 1 )
 		end
 	until( st == nil )
 
 	-- Cache variables
 	repeat
-		local st, en = string.find( str, '$CACHE{%S+}' )
+		local st = str:find( '$CACHE{', 1, true )
 
 		if( st ~= nil ) then
-			local var   = m.expandVariables( string.sub( str, st + 5, en - 1 ) )
+			local en    = str:find( '}', st + 7, true )
+			local var   = m.expandVariables( string.sub( str, st + 7, en - 1 ) )
 			local value = m.cache_entries[ var ] or ''
 
 			str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
