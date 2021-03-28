@@ -38,8 +38,16 @@ m.IGNORE   = 'IGNORE'
 m.NOTFOUND = 'NOTFOUND'
 
 function cmake_project( filePath )
-	m.scope.push()
+	if( os.isdir( filePath ) ) then
+		filePath = path.join( filePath, 'CMakeLists.txt' )
+	end
+
+	local scope = m.scope.push()
+	scope.variables[ 'PROJECT_SOURCE_DIR' ]        = path.getdirectory( filePath )
+	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
+
 	m.loadScript( filePath )
+
 	m.scope.pop()
 
 	if( _OPTIONS.verbose ) then

@@ -9,10 +9,6 @@ m.OP_TYPE.BINARY   = 0x2
 m.OP_TYPE.BOOL     = 0x4
 
 function m.loadScript( filePath )
-	if( os.isdir( filePath ) ) then
-		filePath = path.join( filePath, 'CMakeLists.txt' )
-	end
-
 	local file = io.open( filePath, 'r' )
 	if( file == nil ) then
 		p.error( 'Failed to open "%s"', filePath )
@@ -54,16 +50,13 @@ function m.loadScript( filePath )
 
 	local commandList  = m.deserializeCommandList( content )
 	local currentGroup = p.api.scope.group
+	local scope        = m.scope.current()
+	local prevListFile = scope.CMAKE_CURRENT_LIST_FILE
+	scope.variables[ 'CMAKE_CURRENT_LIST_FILE' ] = filePath
+	scope.variables[ 'CMAKE_CURRENT_LIST_DIR' ]  = path.getdirectory( filePath )
 
 	-- Add predefined variables
 	m.addSystemVariables()
-
-	local scope = m.scope.current()
-
-	scope.variables[ 'PROJECT_SOURCE_DIR' ]        = path.getdirectory( filePath )
-	scope.variables[ 'CMAKE_CURRENT_LIST_FILE' ]   = filePath
-	scope.variables[ 'CMAKE_CURRENT_LIST_DIR' ]    = path.getdirectory( filePath )
-	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
 
 	-- Execute commands in order
 	for _,cmd in ipairs( commandList ) do
@@ -73,6 +66,12 @@ function m.loadScript( filePath )
 	-- Handle cache entries
 	for entry,value in pairs( m.cache_entries ) do
 		m.handleLeftoverCacheEntry( entry, value )
+	end
+
+	-- Restore previous list file
+	if( prevListFile ) then
+		scope.variables[ 'CMAKE_CURRENT_LIST_FILE' ] = prevListFile
+		scope.variables[ 'CMAKE_CURRENT_LIST_DIR' ]  = path.getdirectory( prevListFile )
 	end
 
 	if( currentGroup ) then
