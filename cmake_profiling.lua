@@ -4,11 +4,12 @@ m.profiling         = { }
 m.profiling.entries = { }
 
 function m.profiling.recordFunction( key, func, ... )
-	local now = os.clock()
-
-	func( ... )
+	local now    = os.clock()
+	local result = func( ... )
 
 	m.profiling.entries[ key ] = ( m.profiling.entries[ key ] or 0 ) + ( os.clock() - now )
+
+	return result
 end
 
 function m.profiling.printReport()
