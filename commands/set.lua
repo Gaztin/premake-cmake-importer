@@ -45,6 +45,8 @@ function m.commands.set( cmd )
 
 	if( not isCache ) then
 		local value = table.concat( values, ' ' )
+		-- Trim leading and trailing whitespace
+		value = value:match( '%s*(.*%S)%s*' ) or value
 
 		if( parentScope ) then
 			scope.parent.variables[ variableName ] = value
