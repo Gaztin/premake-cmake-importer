@@ -14,9 +14,9 @@ function m.commands.cmake_parse_arguments( cmd )
 		local n            = cmd.arguments[ 2 ]
 		local argc         = scope.variables.ARGC
 		prefix             = cmd.arguments[ 3 ]
-		options            = string.explode( cmd.arguments[ 4 ], '[; ]' )
-		oneValueKeywords   = string.explode( cmd.arguments[ 5 ], '[; ]' )
-		multiValueKeywords = string.explode( cmd.arguments[ 6 ], '[; ]' )
+		options            = string.explode( cmd.arguments[ 4 ], '[; ]+' )
+		oneValueKeywords   = string.explode( cmd.arguments[ 5 ], '[; ]+' )
+		multiValueKeywords = string.explode( cmd.arguments[ 6 ], '[; ]+' )
 
 		for i=n,#argc do
 			local arg = scope.variables[ 'ARGV' .. ( i - 1 ) ]
@@ -24,12 +24,12 @@ function m.commands.cmake_parse_arguments( cmd )
 		end
 	else
 		prefix             = cmd.arguments[ 1 ]
-		options            = string.explode( cmd.arguments[ 2 ], '[; ]' )
-		oneValueKeywords   = string.explode( cmd.arguments[ 3 ], '[; ]' )
-		multiValueKeywords = string.explode( cmd.arguments[ 4 ], '[; ]' )
+		options            = string.explode( cmd.arguments[ 2 ], '[; ]+' )
+		oneValueKeywords   = string.explode( cmd.arguments[ 3 ], '[; ]+' )
+		multiValueKeywords = string.explode( cmd.arguments[ 4 ], '[; ]+' )
 
 		for i=5,#cmd.arguments do
-			args = table.join( args, string.explode( cmd.arguments[ i ], '[; ]' ) )
+			args = table.join( args, string.explode( cmd.arguments[ i ], '[; ]+' ) )
 		end
 	end
 

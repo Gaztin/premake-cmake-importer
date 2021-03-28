@@ -51,7 +51,7 @@ end
 local function foreachBasic( cmd )
 	return {
 		loopVar = cmd.arguments[ 1 ],
-		items   = string.explode( cmd.arguments[ 2 ], '[ ;]+' ),
+		items   = string.explode( cmd.arguments[ 2 ], '[; ]+' ),
 	}
 end
 

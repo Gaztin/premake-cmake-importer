@@ -5,7 +5,7 @@ local subcommands = { }
 local function getList( listVar )
 	local listValue = m.dereference( listVar )
 	if( listValue ) then
-		return string.explode( listValue, '[; ]' )
+		return string.explode( listValue, '[; ]+' )
 	else
 		return { }
 	end
