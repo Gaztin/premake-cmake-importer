@@ -139,38 +139,33 @@ local binaryOperators = {
 	end,
 
 	VERSION_LESS = function( lhs, rhs )
-		p.warn( 'conditions: %s VERSION_LESS %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return false
+		return m.compareVersions( lhs, rhs ) < 0
 	end,
 
 	VERSION_GREATER = function( lhs, rhs )
-		p.warn( 'conditions: %s VERSION_GREATER %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return false
+		return m.compareVersions( lhs, rhs ) > 0
 	end,
 
 	VERSION_EQUAL = function( lhs, rhs )
-		p.warn( 'conditions: %s VERSION_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return false
+		return m.compareVersions( lhs, rhs ) == 0
 	end,
 
 	VERSION_LESS_EQUAL = function( lhs, rhs )
-		p.warn( 'conditions: %s VERSION_LESS_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return false
+		return m.compareVersions( lhs, rhs ) <= 0
 	end,
 
 	VERSION_GREATER_EQUAL = function( lhs, rhs )
-		p.warn( 'conditions: %s VERSION_GREATER_EQUAL %s', lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return false
+		return m.compareVersions( lhs, rhs ) >= 0
 	end,
 
 	IN_LIST = function( lhs, rhs )

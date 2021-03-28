@@ -232,3 +232,24 @@ function m.replace( text, replacee, replacement )
 		return text
 	end
 end
+
+function m.compareVersions( version1, version2 )
+	-- Pad with zeroes so that in case either version has insufficient amount of numbers,
+	-- it is always comparing against zeroes
+	local zeroes   = { '0', '0', '0', '0' }
+	local numbers1 = table.join( version1:explode( '%.' ), zeroes )
+	local numbers2 = table.join( version2:explode( '%.' ), zeroes )
+
+	for i=1,4 do
+		local number1 = tonumber( numbers1[ i ] )
+		local number2 = tonumber( numbers2[ i ] )
+		print( numbers1[ i ], numbers2[ i ] )
+		if( number1 < number2 ) then
+			return -1
+		elseif( number1 > number2 ) then
+			return 1
+		end
+	end
+
+	return 0
+end
