@@ -17,7 +17,6 @@ function m.splitTerms( text )
 			local nextSpace = string.find( text, '%s', head )
 			local tail      = nextSpace and ( nextSpace - 1 )
 			local term      = string.sub( text, head, tail )
-			term            = tonumber( term ) or term
 			head            = tail and string.find( text, '%S', tail + 1, false )
 			table.insert( terms, term )
 		end

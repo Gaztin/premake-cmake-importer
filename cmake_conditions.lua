@@ -211,7 +211,6 @@ function m.conditions.evalExpression( str )
 	-- Expand variables and convert numbers
 	for i=1,#terms do
 		terms[ i ] = m.expandVariables( terms[ i ] )
-		terms[ i ] = tonumber( terms[ i ] ) or terms[ i ]
 	end
 
 	-- Unary operations
