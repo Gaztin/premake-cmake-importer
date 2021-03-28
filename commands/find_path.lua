@@ -6,10 +6,7 @@ local keywordDirs = {
 	PROGRAM = 'bin',
 }
 
--- @cmd is the command table.
--- @keyword is one of 'INCLUDE', 'LIBRARY' or 'PROGRAM'.
--- @extension(optional) is added at the end of the searched file paths.
-local function findPath( cmd, keyword, extension )
+local function findPath( arguments, keyword, extension )
 	extension = extension or ''
 
 	local possibleOptions    = { 'HINTS', 'PATHS', 'PATH_SUFFIXES', 'DOC', 'REQUIRED',
@@ -17,8 +14,6 @@ local function findPath( cmd, keyword, extension )
 	                            'NO_CMAKE_ENVIRONMENT_PATH', 'NO_SYSTEM_ENVIRONMENT_PATH',
 	                            'NO_CMAKE_SYSTEM_PATH', 'CMAKE_FIND_ROOT_PATH_BOTH',
 	                            'ONLY_CMAKE_FIND_ROOT_PATH', 'NO_CMAKE_FIND_ROOT_PATH' }
-	local arguments          = table.arraycopy( cmd.arguments )
-	local var                = table.remove( arguments, 1 )
 	local names              = { }
 	local hints              = { }
 	local paths              = { }
@@ -143,9 +138,7 @@ local function findPath( cmd, keyword, extension )
 				local filePath = path.join( packageRoot, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = filePath
-
-					return filePath
+					return packageRoot, filePath
 				end
 			end
 		end
@@ -165,18 +158,14 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( archDir, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = filePath
-
-						return filePath
+						return archDir, filePath
 					end
 				end
 
 				local filePath = path.join( dir, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = filePath
-
-					return filePath
+					return dir, filePath
 				end
 			end
 		end
@@ -190,9 +179,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = filePath
-
-						return filePath
+						return pathh, filePath
 					end
 				end
 			end
@@ -207,9 +194,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = filePath
-
-						return filePath
+						return pathh, filePath
 					end
 				end
 			end
@@ -230,18 +215,14 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( archDir, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = filePath
-
-						return filePath
+						return archDir, filePath
 					end
 				end
 
 				local filePath = path.join( dir, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = dir
-
-					return filePath
+					return dir, filePath
 				end
 			end
 		end
@@ -255,9 +236,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = filePath
-
-						return filePath
+						return pathh, filePath
 					end
 				end
 			end
@@ -272,9 +251,7 @@ local function findPath( cmd, keyword, extension )
 					local filePath = path.join( pathh, name )
 
 					if( os.isfile( filePath ) ) then
-						m.cache_entries[ var ] = filePath
-
-						return filePath
+						return pathh, filePath
 					end
 				end
 			end
@@ -286,9 +263,7 @@ local function findPath( cmd, keyword, extension )
 			local filePath = path.join( hint, name )
 
 			if( os.isfile( filePath ) ) then
-				m.cache_entries[ var ] = filePath
-
-				return filePath
+				return hint, filePath
 			end
 		end
 	end
@@ -301,9 +276,7 @@ local function findPath( cmd, keyword, extension )
 				local filePath = path.join( pathEnvPath, name )
 
 				if( os.isfile( filePath ) ) then
-					m.cache_entries[ var ] = filePath
-
-					return filePath
+					return pathEnvPath, filePath
 				end
 			end
 		end
@@ -316,29 +289,40 @@ local function findPath( cmd, keyword, extension )
 			local filePath = path.join( pathh, name )
 
 			if( os.isfile( filePath ) ) then
-				m.cache_entries[ var ] = filePath
-
-				return filePath
+				return pathh, filePath
 			end
 		end
 	end
-
-	return m.NOTFOUND
 end
 
 function m.commands.find_path( cmd )
 	-- Find include directories
-	findPath( cmd, 'INCLUDE' )
+	local arguments         = table.arraycopy( cmd.arguments )
+	local var               = table.remove( arguments, 1 )
+	local fileDir, filePath = findPath( arguments, 'INCLUDE' )
+	if( fileDir ) then
+		m.cache_entries[ var ] = fileDir
+	end
 end
 
 function m.commands.find_program( cmd )
 	-- Find program directories
-	findPath( cmd, 'PROGRAM', iif( os.ishost( 'windows' ), '.exe', nil ) )
+	local arguments         = table.arraycopy( cmd.arguments )
+	local var               = table.remove( arguments, 1 )
+	local fileDir, filePath = findPath( arguments, 'PROGRAM', iif( os.ishost( 'windows' ), '.exe', nil ) )
+	if( filePath ) then
+		m.cache_entries[ var ] = filePath
+	end
 end
 
 function m.commands.find_library( cmd )
 	-- Find library directories
-	findPath( cmd, 'LIBRARY', iif( os.istarget( 'windows' ), '.lib', '.a' ) )
+	local arguments         = table.arraycopy( cmd.arguments )
+	local var               = table.remove( arguments, 1 )
+	local fileDir, filePath = findPath( arguments, 'LIBRARY', iif( os.istarget( 'windows' ), '.lib', '.a' ) )
+	if( filePath ) then
+		m.cache_entries[ var ] = filePath
+	end
 end
 
 function m.commands.find_package( cmd )
