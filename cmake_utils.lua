@@ -233,10 +233,14 @@ function m.replace( text, replacee, replacement )
 	end
 end
 
+function m.isVersionString( str )
+	return str:match( '^%d+%.%d+[%.%d+]*$' ) ~= nil
+end
+
 function m.compareVersions( version1, version2 )
 	-- Pad with zeroes so that in case either version has insufficient amount of numbers,
 	-- it is always comparing against zeroes
-	local zeroes   = { '0', '0', '0', '0' }
+	local zeroes   = { '0', '0' }
 	local numbers1 = table.join( version1:explode( '%.' ), zeroes )
 	local numbers2 = table.join( version2:explode( '%.' ), zeroes )
 

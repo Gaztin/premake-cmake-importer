@@ -141,31 +141,46 @@ local binaryOperators = {
 	VERSION_LESS = function( lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return m.compareVersions( lhs, rhs ) < 0
+		if( m.isVersionString( lhs ) and m.isVersionString( rhs ) ) then
+			return m.compareVersions( lhs, rhs ) < 0
+		end
+		return false
 	end,
 
 	VERSION_GREATER = function( lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return m.compareVersions( lhs, rhs ) > 0
+		if( m.isVersionString( lhs ) and m.isVersionString( rhs ) ) then
+			return m.compareVersions( lhs, rhs ) > 0
+		end
+		return false
 	end,
 
 	VERSION_EQUAL = function( lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return m.compareVersions( lhs, rhs ) == 0
+		if( m.isVersionString( lhs ) and m.isVersionString( rhs ) ) then
+			return m.compareVersions( lhs, rhs ) == 0
+		end
+		return false
 	end,
 
 	VERSION_LESS_EQUAL = function( lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return m.compareVersions( lhs, rhs ) <= 0
+		if( m.isVersionString( lhs ) and m.isVersionString( rhs ) ) then
+			return m.compareVersions( lhs, rhs ) <= 0
+		end
+		return false
 	end,
 
 	VERSION_GREATER_EQUAL = function( lhs, rhs )
 		lhs = m.dereference( lhs ) or lhs
 		rhs = m.dereference( rhs ) or rhs
-		return m.compareVersions( lhs, rhs ) >= 0
+		if( m.isVersionString( lhs ) and m.isVersionString( rhs ) ) then
+			return m.compareVersions( lhs, rhs ) >= 0
+		end
+		return false
 	end,
 
 	IN_LIST = function( lhs, rhs )
