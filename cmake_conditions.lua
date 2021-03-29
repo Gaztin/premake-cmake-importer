@@ -24,8 +24,7 @@ local unaryOperators = {
 	end,
 
 	EXISTS = function( rhs )
-		p.warn( 'conditions: EXISTS not supported!' )
-		return false
+		return os.stat( rhs ) ~= nil
 	end,
 
 	POLICY = function( rhs )
