@@ -341,7 +341,7 @@ function m.commands.find_package( cmd )
 	                                 'NO_CMAKE_SYSTEM_PACKAGE_REGISTRY', 'CMAKE_FIND_ROOT_PATH_BOTH',
 	                                 'ONLY_CMAKE_FIND_ROOT_PATH', 'NO_CMAKE_FIND_ROOT_PATH' }
 	local possible_full_options  = table.join( possible_basic_options, possible_extra_options )
-	local version                = ( arguments[ 1 ] and not table.contains( possible_full_options, arguments[ 1 ] ) ) and table.remove( arguments, 1 )
+	local version                = ( arguments[ 1 ] and not table.contains( possible_full_options, arguments[ 1 ] ) ) and table.remove( arguments, 1 ) or nil
 	local basic_options          = table.intersect( possible_basic_options, arguments )
 	local exact                  = false
 	local quiet                  = false
