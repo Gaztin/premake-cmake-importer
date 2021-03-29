@@ -15,7 +15,40 @@ function subcommands.REPLACE( match, replacement, outVar, ... )
 	scope.variables[ outVar ] = m.replace( input, match, replacement )
 end
 
--- TODO: REGEX
+function subcommands.REGEX( subsubcommand, ... )
+	local scope          = m.scope.current()
+	local subsubcommands = {
+		MATCH = function( regex, outVar, input, ... )
+			local inputs              = table.concat( { input, ... } )
+			scope.variables[ outVar ] = inputs:match( regex )
+		end,
+
+		MATCHALL = function( regex, outVar, input, ... )
+			local inputs  = table.concat( { input, ... } )
+			local matches = { }
+
+			for match in concatenatedInputs:gmatch( regex ) do
+				table.insert( matches, match )
+			end
+
+			scope.variables[ outVar ] = table.concat( matches, ';' )
+		end,
+
+		REPLACE = function( regex, replacement, outVar, input, ... )
+			local inputs              = table.concat( { input, ... } )
+			-- CMake captures are written as: \1 \2 \3 while lua captures are: %1 %2 %3
+			replacement               = replacement:gsub( '\\\\(%d)', '%%%1' )
+			scope.variables[ outVar ] = inputs:gsub( regex, replacement )
+		end,
+	}
+
+	local callback = subsubcommands[ subsubcommand ]
+	if( not callback ) then
+		p.error( 'string REGEX: Invalid sub-subcommand %s!', subsubcommand )
+	end
+
+	callback( ... )
+end
 
 function subcommands.APPEND( strVar, ... )
 	local scope = m.scope.current()
