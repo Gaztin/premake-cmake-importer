@@ -136,7 +136,7 @@ function m.addSystemVariables()
 	scope.variables[ 'CMAKE_HOST_SYSTEM_PROCESSOR' ] = m.HOST_SYSTEM_PROCESSOR
 	scope.variables[ 'CMAKE_HOST_SYSTEM_VERSION' ]   = string.format( '%d.%d.%d', sysinfo.majorversion, sysinfo.minorversion, sysinfo.revision )
 	scope.variables[ 'CMAKE_HOST_SYSTEM' ]           = '%{CMAKE_HOST_SYSTEM_NAME}.%{CMAKE_HOST_SYSTEM_VERSION}'
-	scope.variables[ 'CMAKE_SIZEOF_VOID_P' ]         = iif( os.is64bit(), 8, 4 )
+	scope.variables[ 'CMAKE_SIZEOF_VOID_P' ]         = iif( os.is64bit(), '8', '4' )
 
 	if( host == 'windows' ) then
 		scope.variables[ 'CMAKE_HOST_WIN32' ] = m.TRUE
