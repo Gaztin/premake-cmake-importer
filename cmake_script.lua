@@ -46,7 +46,7 @@ function m.loadScript( filePath )
 	until index == nil
 
 	-- Remove all control characters (mainly newlines)
-	content = content:gsub( '%c', ' ' )
+	content = content:gsub( '%c', '' )
 
 	local commandList  = m.deserializeCommandList( content )
 	local currentGroup = p.api.scope.group
