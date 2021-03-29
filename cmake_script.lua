@@ -197,6 +197,118 @@ function m.addSystemVariables()
 
 	scope.variables[ 'CMAKE_GENERATOR' ] = generators[ _ACTION ] or 'Unknown'
 	
+	-- Variables for languages
+
+	local languages = {
+--		[ 'CUDA' ]          = 'CUDA',
+		[ 'C++' ]           = 'CXX',
+		[ 'C' ]             = 'C',
+--		[ 'Fortran' ]       = 'Fortran',
+		[ 'Objective-C' ]   = 'OBJC',
+		[ 'Objective-C++' ] = 'OBJC',
+--		[ 'Swift' ]         = 'Swift',
+	}
+
+	local compilers = {
+		[ 'xcode4:clang' ] = 'AppleClang',
+		[ 'msc' ]          = 'MSVC',
+		[ 'clang' ]        = 'Clang',
+		[ 'gcc' ]          = 'GNU',
+	}
+
+	local fileExtensions = {
+--		[ 'CUDA' ]          = '.cu',
+		[ 'C++' ]           = '.cpp;.cxx;.cc',
+		[ 'C' ]             = '.c',
+		[ 'Fortran' ]       = '.f;.for;.f77;.ftn;.f90;.f95;.f03;.f08',
+		[ 'Objective-C' ]   = '.m',
+		[ 'Objective-C++' ] = '.mm',
+--		[ 'Swift' ]         = '.swift',
+	}
+
+	-- TODO: Get the toolset of the current platform
+	local action   = p.action.current()
+	local toolname = action.toolset:explode( '-', true, 1 )[ 1 ]
+	local compiler = compilers[ _ACTION .. ':' .. toolname ] or compilers[ toolname ]
+
+	scope.variables[ 'CMAKE_COMPILER_IS_GNUCC' ]                = ( compiler == 'GNU' ) and m.TRUE or m.FALSE
+	scope.variables[ 'CMAKE_COMPILER_IS_GNUCXX' ]               = ( compiler == 'GNU' ) and m.TRUE or m.FALSE
+	scope.variables[ 'CMAKE_COMPILER_IS_GNUG77' ]               = ( compiler == 'GNU' ) and m.TRUE or m.FALSE
+--	scope.variables[ 'CMAKE_CUDA_COMPILE_FEATURES' ]
+--	scope.variables[ 'CMAKE_CUDA_HOST_COMPILER' ]
+--	scope.variables[ 'CMAKE_CUDA_EXTENSIONS' ]
+	scope.variables[ 'CMAKE_CUDA_STANDARD' ]                    = '14'
+	scope.variables[ 'CMAKE_CUDA_STANDARD_REQUIRED' ]           = m.ON
+--	scope.variables[ 'CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES' ]
+--	scope.variables[ 'CMAKE_CXX_COMPILE_FEATURES' ]
+--	scope.variables[ 'CMAKE_CXX_EXTENSIONS' ]
+	scope.variables[ 'CMAKE_CXX_STANDARD' ]                     = '17'
+	scope.variables[ 'CMAKE_CXX_STANDARD_REQUIRED' ]            = m.ON
+--	scope.variables[ 'CMAKE_C_COMPILE_FEATURES' ]
+--	scope.variables[ 'CMAKE_C_EXTENSIONS' ]
+	scope.variables[ 'CMAKE_C_STANDARD' ]                       = '11'
+	scope.variables[ 'CMAKE_C_STANDARD_REQUIRED' ]              = m.ON
+--	scope.variables[ 'CMAKE_Fortran_MODDIR_DEFAULT' ]
+--	scope.variables[ 'CMAKE_Fortran_MODDIR_FLAG' ]
+--	scope.variables[ 'CMAKE_Fortran_MODOUT_FLAG' ]
+--	scope.variables[ 'CMAKE_OBJC_EXTENSIONS' ]
+	scope.variables[ 'CMAKE_OBJC_STANDARD' ]                    = '11'
+	scope.variables[ 'CMAKE_OBJC_STANDARD_REQUIRED' ]           = m.ON
+--	scope.variables[ 'CMAKE_OBJCXX_EXTENSIONS' ]
+	scope.variables[ 'CMAKE_OBJCXX_STANDARD' ]                  = '17'
+	scope.variables[ 'CMAKE_OBJCXX_STANDARD_REQUIRED' ]         = m.ON
+	scope.variables[ 'CMAKE_Swift_LANGUAGE_VERSION' ]           = '2.3'
+	scope.variables[ 'CMAKE_C_FLAGS' ]                          = os.getenv( 'CFLAGS' )
+	scope.variables[ 'CMAKE_CXX_FLAGS' ]                        = os.getenv( 'CXXFLAGS' )
+	scope.variables[ 'CMAKE_CUDA_FLAGS' ]                       = os.getenv( 'CUDAFLAGS' )
+	scope.variables[ 'CMAKE_Fortran_FLAGS' ]                    = os.getenv( 'FFLAGS' )
+
+	for premakeLang, cmakeLang in pairs( languages ) do
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_ANDROID_TOOLCHAIN_MACHINE' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_ANDROID_TOOLCHAIN_PREFIX' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_ANDROID_TOOLCHAIN_SUFFIX' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_ARCHIVE_APPEND' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_ARCHIVE_CREATE' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_ARCHIVE_FINISH' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER_EXTERNAL_TOOLCHAIN' ]
+		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER_ID' ]                         = compiler
+		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER_LOADED' ]                     = m.FALSE
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER_PREDEFINES_COMMAND' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER_TARGET' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILER_VERSION' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_COMPILE_OBJECT' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_CREATE_SHARED_LIBRARY' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_CREATE_SHARED_MODULE' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_CREATE_STATIC_LIBRARY' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_FLAGS_INIT' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_IGNORE_EXTENSIONS' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_IMPLICIT_INCLUDE_DIRECTORIES' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_IMPLICIT_LINK_DIRECTORIES' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_IMPLICIT_LINK_LIBRARIES' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_LIBRARY_ARCHITECTURE' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_LINKER_PREFERENCE' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_LINKER_PREFERENCE_PROPAGATES' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_LINKER_WRAPPER_FLAG' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_LINKER_WRAPPER_FLAG_SEP' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_LINK_EXECUTABLE' ]
+		scope.variables[ 'CMAKE_' .. cmakeLang .. '_OUTPUT_EXTENSION' ]                    = iif( os.ishost( 'windows' ), '.obj', '.o' )
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_SIMULATE_ID' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_SIMULATE_VERSION' ]
+		scope.variables[ 'CMAKE_' .. cmakeLang .. '_SIZEOF_DATA_PTR' ]                     = scope.variables.CMAKE_SIZEOF_VOID_P
+		scope.variables[ 'CMAKE_' .. cmakeLang .. '_SOURCE_FILE_EXTENSIONS' ]              = fileExtensions[ premakeLang ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_STANDARD_INCLUDE_DIRECTORIES' ]
+--		scope.variables[ 'CMAKE_' .. cmakeLang .. '_STANDARD_LIBRARIES' ]
+--		scope.variables[ 'CMAKE_USER_MAKE_RULES_OVERRIDE_' .. cmakeLang ]
+
+		for i,config in ipairs( p.api.scope.workspace.configurations ) do
+			config = config:upper()
+--			scope.variables[ 'CMAKE_' .. cmakeLang .. '_FLAGS_' .. config ]
+--			scope.variables[ 'CMAKE_' .. cmakeLang .. '_FLAGS_' .. config .. '_INIT' ]
+		end
+	end
+
 	-- TODO: MSVC*
 	-- TODO: MSYS
 	-- TODO: WINCE
