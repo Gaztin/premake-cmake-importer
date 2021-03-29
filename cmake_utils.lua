@@ -243,7 +243,6 @@ function m.compareVersions( version1, version2 )
 	for i=1,4 do
 		local number1 = tonumber( numbers1[ i ] )
 		local number2 = tonumber( numbers2[ i ] )
-		print( numbers1[ i ], numbers2[ i ] )
 		if( number1 < number2 ) then
 			return -1
 		elseif( number1 > number2 ) then
