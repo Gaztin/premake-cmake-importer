@@ -107,8 +107,9 @@ function m.expandVariables( str )
 		local st = str:find( '${', 1, true )
 
 		if( st ~= nil ) then
+			str         = str:sub( 1, st + 1 ) .. m.expandVariables( str:sub( st + 2 ) )
 			local en    = str:find( '}', st + 2, true )
-			local var   = m.expandVariables( str:sub( st + 2, en - 1 ) )
+			local var   = str:sub( st + 2, en - 1 )
 			local scope = m.scope.current()
 			local value
 
@@ -132,8 +133,9 @@ function m.expandVariables( str )
 		local st = str:find( '$ENV{', 1, true )
 
 		if( st ~= nil ) then
+			str         = str:sub( 1, st + 4 ) .. m.expandVariables( str:sub( st + 5 ) )
 			local en    = str:find( '}', st + 5, true )
-			local var   = m.expandVariables( str:sub( st + 5, en - 1 ) )
+			local var   = str:sub( st + 5, en - 1 )
 			local value = os.getenv( var ) or ''
 			str         = str:sub( 1, st - 1 ) .. value .. str:sub( en + 1 )
 		end
@@ -144,8 +146,9 @@ function m.expandVariables( str )
 		local st = str:find( '$CACHE{', 1, true )
 
 		if( st ~= nil ) then
+			str         = str:sub( 1, st + 6 ) .. m.expandVariables( str:sub( st + 7 ) )
 			local en    = str:find( '}', st + 7, true )
-			local var   = m.expandVariables( string.sub( str, st + 7, en - 1 ) )
+			local var   = str:sub( st + 7, en - 1 )
 			local value = m.cache_entries[ var ] or ''
 
 			str = string.sub( str, 1, st - 1 ) .. value .. string.sub( str, en + 1 )
