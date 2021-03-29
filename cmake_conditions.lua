@@ -44,8 +44,7 @@ local unaryOperators = {
 	end,
 
 	IS_ABSOLUTE = function( rhs )
-		p.warn( 'conditions: IS_ABSOLUTE not supported!' )
-		return false
+		return path.isabsolute( rhs )
 	end,
 	
 	DEFINED = function( rhs )
