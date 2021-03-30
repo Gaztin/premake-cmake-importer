@@ -3,6 +3,7 @@ p.extensions.impcmake = { }
 local m               = p.extensions.impcmake
 m.aliases             = { }
 m.cache_entries       = { }
+m.options             = { }
 
 require 'cmake_commands'
 require 'cmake_conditions'
@@ -47,6 +48,11 @@ function cmakeproject( filePath )
 	scope.variables[ 'PROJECT_SOURCE_DIR' ]        = path.getdirectory( filePath )
 	scope.variables[ 'CMAKE_CONFIGURATION_TYPES' ] = table.implode( p.api.scope.workspace.configurations, '"', '"', ' ' )
 
+	-- Add all predefined options as variables in root scope
+	for name,value in pairs( m.options ) do
+		scope.variables[ name ] = value
+	end
+
 	m.loadScript( filePath )
 
 	m.scope.pop()
@@ -56,5 +62,15 @@ function cmakeproject( filePath )
 	end
 end
 
+function cmakeoption( name, value )
+	-- Allow usage: cmakeoption( 'FOO', true )
+	if( type( value ) == 'boolean' ) then
+		value = ( value and m.ON or m.OFF )
+	end
+
+	m.options[ name ] = value
+end
+
 -- Allow camelCase usages of functions
 p.api.alias( 'cmakeproject', 'cmakeProject' )
+p.api.alias( 'cmakeoption', 'cmakeOption' )
