@@ -38,7 +38,7 @@ m.N        = 'N'
 m.IGNORE   = 'IGNORE'
 m.NOTFOUND = 'NOTFOUND'
 
-function cmake_project( filePath )
+function cmakeproject( filePath )
 	if( os.isdir( filePath ) ) then
 		filePath = path.join( filePath, 'CMakeLists.txt' )
 	end
@@ -55,3 +55,6 @@ function cmake_project( filePath )
 		m.profiling.printReport()
 	end
 end
+
+-- Allow camelCase usages of functions
+p.api.alias( 'cmakeproject', 'cmakeProject' )
